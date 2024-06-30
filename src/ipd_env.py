@@ -1,153 +1,99 @@
+import functools
+
+import gymnasium
 import numpy as np
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from gym.spaces import Box, Discrete
-from pettingzoo import AECEnv
-from pettingzoo.utils.env import ParallelEnv
+from gymnasium.spaces import Discrete
+from pettingzoo import ParallelEnv
+from pettingzoo.utils import parallel_to_aec, wrappers
 
+COOPERATE = 0
+DEFECT = 1
+MOVES = ("COOPERATE", "DEFECT")
 
-class OneHot(Box):
-    def __init__(self, n):
-        super().__init__(0, 1, (n,), dtype=np.float32)
-        self.n = n
+NUM_ITERS = 100
+REWARD_MAP = {
+    (COOPERATE, COOPERATE): (3, 3),  
+    (COOPERATE, DEFECT): (0, 4),     
+    (DEFECT, COOPERATE): (4, 0),     
+    (DEFECT, DEFECT): (1, 1),        
+}
 
-    def sample(self):
-        one_hot = np.zeros(self.n, dtype=np.float32)
-        one_hot[np.random.randint(self.n)] = 1
-        return one_hot
+def env(render_mode=None):
+    internal_render_mode = render_mode if render_mode != "ansi" else "human"
+    env = raw_env(render_mode=internal_render_mode)
+    if render_mode == "ansi":
+        env = wrappers.CaptureStdoutWrapper(env)
+    env = wrappers.AssertOutOfBoundsWrapper(env)
+    env = wrappers.OrderEnforcingWrapper(env)
+    return env
 
-    def contains(self, x):
-        return isinstance(x, np.ndarray) and x.shape == (self.n,) and np.all((x == 0) | (x == 1))
+def raw_env(render_mode=None):
+    env = parallel_env(render_mode=render_mode)
+    env = parallel_to_aec(env)
+    return env
 
-class QNetwork(nn.Module):
-    def __init__(self, input_size, output_size):
-        super(QNetwork, self).__init__()
-        self.fc1 = nn.Linear(input_size, 64)
-        self.fc2 = nn.Linear(64, 64)
-        self.fc3 = nn.Linear(64, output_size)
+class parallel_env(ParallelEnv):
+    metadata = {"render_modes": ["human"], "name": "prisoners_dilemma_v1"}
 
-    def forward(self, x):
-        x = torch.relu(self.fc1(x))
-        x = torch.relu(self.fc2(x))
-        return self.fc3(x)
+    def __init__(self, render_mode=None):
+        self.possible_agents = ["player_0", "player_1"]
+        self.agent_name_mapping = dict(zip(self.possible_agents, list(range(len(self.possible_agents)))))
+        self.render_mode = render_mode
 
-class IteratedPrisonersDilemma(AECEnv):
-    """
-    A two-agent environment for the Prisoner's Dilemma game.
-    Possible actions for each agent are (C)ooperate and (D)efect.
-    """
-    metadata = {'render.modes': ['human']}
+    @functools.lru_cache(maxsize=None)
+    def observation_space(self, agent):
+        return Discrete(4)
 
-    def __init__(self, max_steps):
-        super().__init__()
-        self.max_steps = max_steps
-        self.payout_mat = np.array([[-1., 0.], [-3., -2.]])
-        self.agents = ["player_0", "player_1"]
-        self.agent_name_mapping = {agent: i for i, agent in enumerate(self.agents)}
-        self.action_spaces = {agent: Discrete(2) for agent in self.agents}
-        self.observation_spaces = {agent: OneHot(5) for agent in self.agents}
-        self.step_count = None
-        self.last_actions = None  # To store the last actions taken
+    @functools.lru_cache(maxsize=None)
+    def action_space(self, agent):
+        return Discrete(2)
 
-        # Q-learning parameters
-        self.q_nets = {agent: QNetwork(5, 2) for agent in self.agents}
-        self.optimizers = {agent: optim.Adam(self.q_nets[agent].parameters(), lr=0.01) for agent in self.agents}
-        self.loss_fn = nn.MSELoss()
-        self.discount_factor = 0.95
-        self.epsilon = 0.1
+    def render(self):
+        if self.render_mode is None:
+            gymnasium.logger.warn("You are calling render method without specifying any render mode.")
+            return
 
-    @property
-    def num_agents(self):
-        return len(self.agents)
-
-    def reset(self):
-        self.step_count = 0
-        self.agents = ["player_0", "player_1"]
-        init_state = np.zeros(5)
-        init_state[-1] = 1
-        self.state = init_state
-        self.rewards = {agent: 0 for agent in self.agents}
-        self.dones = {agent: False for agent in self.agents}
-        self.infos = {agent: {} for agent in self.agents}
-        self.last_actions = None
-        return {agent: self.state for agent in self.agents}
-
-    def step(self, action):
-        if self.dones[self.agents[0]] or self.dones[self.agents[1]]:
-            raise Exception("Step called after episode is done")
-
-        ac0, ac1 = action["player_0"], action["player_1"]
-        self.step_count += 1
-        self.last_actions = (ac0, ac1)
-
-        rewards = [self.payout_mat[ac1][ac0], self.payout_mat[ac0][ac1]]
-        self.rewards["player_0"], self.rewards["player_1"] = rewards
-
-        state = np.zeros(5)
-        state[ac0 * 2 + ac1] = 1
-        self.state = state
-
-        if self.step_count >= self.max_steps:
-            self.dones = {agent: True for agent in self.agents}
-
-        self.update_q_nets(ac0, ac1, rewards)
-
-        return {agent: self.state for agent in self.agents}, self.rewards, self.dones, self.infos
-
-    def update_q_nets(self, ac0, ac1, rewards):
-        state_tensor = torch.FloatTensor(self.state).unsqueeze(0)
-        next_state_tensor = torch.FloatTensor(self.state).unsqueeze(0)
-
-        for i, agent in enumerate(self.agents):
-            action = ac0 if agent == "player_0" else ac1
-            reward = rewards[i]
-
-            q_values = self.q_nets[agent](state_tensor)
-            with torch.no_grad():
-                next_q_values = self.q_nets[agent](next_state_tensor)
-            
-            target_q_value = reward + self.discount_factor * next_q_values.max().item()
-            loss = self.loss_fn(q_values[0, action], torch.FloatTensor([target_q_value]).unsqueeze(0))
-            
-            self.optimizers[agent].zero_grad()
-            loss.backward()
-            self.optimizers[agent].step()
-
-    def select_action(self, agent):
-        state_tensor = torch.FloatTensor(self.state).unsqueeze(0)
-        if np.random.rand() < self.epsilon:
-            return self.action_spaces[agent].sample()
+        if len(self.agents) == 2:
+            string = "Current state: Agent1: {} , Agent2: {}".format(MOVES[self.state[self.agents[0]]], MOVES[self.state[self.agents[1]]])
         else:
-            with torch.no_grad():
-                q_values = self.q_nets[agent](state_tensor)
-            return q_values.argmax().item()
-
-    def render(self, mode='human'):
-        actions_str = f"Actions: Player 0: {self.last_actions[0]}, Player 1: {self.last_actions[1]}"
-        print(f"Step: {self.step_count}")
-        print(f"State: {self.state}")
-        print(actions_str)
-        print(f"Rewards: {self.rewards}")
+            string = "Game over"
+        print(string)
 
     def close(self):
         pass
 
-def main():
-    env = IteratedPrisonersDilemma(max_steps=10)
-    obs = env.reset()
-    
-    for _ in range(10):
-        actions = {
-            "player_0": env.select_action("player_0"),
-            "player_1": env.select_action("player_1")
-        }
-        obs, rewards, dones, infos = env.step(actions)
-        env.render()
-        if all(dones.values()):
-            break
+    def reset(self, seed=42, options=1):
+        self.agents = self.possible_agents[:]
+        self.num_moves = 0
+        observations = {agent: 0 for agent in self.agents}  # Initial observation can be set to a neutral state like 0
+        infos = {agent: {} for agent in self.agents}
+        self.state = observations
+        print("Reset called - Observations:", observations)  # Debug print
+        return observations, infos  # Ensure that reset returns observations and infos
 
-    env.close()
+    def step(self, actions):
+        if not actions:
+            self.agents = []
+            return {}, {}, {}, {}, {}
 
-if __name__ == "__main__":
-    main()
+        rewards = {}
+        rewards[self.agents[0]], rewards[self.agents[1]] = REWARD_MAP[
+            (actions[self.agents[0]], actions[self.agents[1]])
+        ]
+
+        terminations = {agent: False for agent in self.agents}
+        self.num_moves += 1
+        env_truncation = self.num_moves >= NUM_ITERS
+        truncations = {agent: env_truncation for agent in self.agents}
+
+        observations = {self.agents[i]: int(actions[self.agents[1 - i]]) for i in range(len(self.agents))}
+        self.state = observations
+
+        infos = {agent: {} for agent in self.agents}
+
+        if env_truncation:
+            self.agents = []
+
+        if self.render_mode == "human":
+            self.render()
+        return observations, rewards, terminations, truncations, infos
