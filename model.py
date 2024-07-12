@@ -6,18 +6,15 @@ class QLearning(nn.Module):
     def __init__(self, n_states, n_actions, alpha, gamma, epsilon):
         super(QLearning, self).__init__()
         # Initialize the parameters for Q-Learning
-        self.n_states = n_states  # Number of states
+        self.n_states = 1  # Number of states
         self.n_actions = n_actions  # Number of actions
         self.alpha = alpha  # Learning rate
         self.gamma = gamma  # Discount factor
         self.epsilon = epsilon  # Exploration rate
 
-        # Initialize Q-table with zeros
-        self.q_table = np.zeros((n_states, n_actions))
-
         # Define the neural network model
         self.model = nn.Sequential(
-            nn.Linear(n_states, 64),  # First hidden layer with 64 units
+            nn.Linear(self.n_states, 64),  # First hidden layer with 64 units
             nn.ReLU(),  # Activation function
             nn.Linear(64, 128),  # Second hidden layer with 128 units
             nn.ReLU(),  # Activation function

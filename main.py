@@ -6,7 +6,7 @@ env = ipd_env.parallel_env(render_mode="human")
 observations, infos = env.reset()
 
 # Define state and action spaces
-n_states = 2  # Number of possible states (example: 2 states)
+n_states =  2 # Number of possible states (example: 2 states)
 n_actions = 2  # Number of possible actions (example: 2 actions)
 
 # Initialize agents for each possible agent in the environment
@@ -42,8 +42,6 @@ while env.agents:
     print(f"Step {step}:")
     for agent_id in env.agents:
         print(f"  Agent {agent_id} - Action: {actions[agent_id]}, Reward: {rewards[agent_id]}, Observation: {new_observations[agent_id]}")
-        print(f"  Q-Table for Agent {agent_id}:")
-        print(agents[agent_id].q_learning.q_table)
         print(f"  Epsilon (exploration rate) for Agent {agent_id}: {agents[agent_id].epsilon}")
     print("")
 

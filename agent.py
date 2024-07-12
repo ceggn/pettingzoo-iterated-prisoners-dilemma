@@ -7,7 +7,7 @@ COOPERATE = 0
 DEFECT = 1
 
 class Agent:
-    def __init__(self, n_states, n_actions, n_games=20, alpha=0.003, epsilon=0.1, gamma=0.99, epsilon_decay=0.99, epsilon_min=0.01) -> None:
+    def __init__(self, n_states, n_actions, n_games=9, alpha=0.003, epsilon=0.1, gamma=0.99, epsilon_decay=0.99, epsilon_min=0.01) -> None:
         # Initialize agent parameters
         self.n_games = n_games  # Number of games
         self.alpha = alpha  # Learning rate
@@ -24,7 +24,7 @@ class Agent:
         self.memory = deque(maxlen=10000)
         
         # Define batch size for training
-        self.batch_size = 64
+        self.batch_size = 2
 
     def choose_action(self, state):
         # Epsilon-greedy action selection
@@ -33,7 +33,9 @@ class Agent:
             action = np.random.randint(self.actions)
         else:
             # Exploit: choose the action with the highest Q-value
-            action = np.argmax(self.q_learning.q_table[state])
+            state = torch.tensor([state],dtype=torch.float32)
+            q_values = self.q_learning.forward(state)
+            action = torch.argmax(q_values).item()
         return action
 
     def update(self, state, action, reward, next_state):
@@ -76,6 +78,11 @@ class Agent:
         rewards = torch.tensor(rewards, dtype=torch.float32).unsqueeze(1)
         next_states = torch.tensor(next_states, dtype=torch.float32)
         dones = torch.tensor(dones, dtype=torch.float32).unsqueeze(1)
+
+
+        # Debugging: Print the shape and contents of the states tensor
+       # print(f"Shape of states tensor: {states.shape}")
+       # print(f"Contents of states tensor: {states}")
 
         # Get the current Q-values for all actions in current states
         current_q_values = self.q_learning.forward(states)
