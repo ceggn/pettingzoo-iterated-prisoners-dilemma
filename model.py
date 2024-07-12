@@ -1,28 +1,35 @@
+import torch.nn as nn
 import numpy as np
 import torch
-import torch.nn as nn
 
-class QLearning:
+class QLearning(nn.Module):
     def __init__(self, n_states, n_actions, alpha, gamma, epsilon):
-        self.n_states = n_states
-        self.n_actions = n_actions
+        super(QLearning, self).__init__()
+        # Initialize the parameters for Q-Learning
+        self.n_states = n_states  # Number of states
+        self.n_actions = n_actions  # Number of actions
         self.alpha = alpha  # Learning rate
         self.gamma = gamma  # Discount factor
         self.epsilon = epsilon  # Exploration rate
+
+        # Initialize Q-table with zeros
         self.q_table = np.zeros((n_states, n_actions))
 
+        # Define the neural network model
         self.model = nn.Sequential(
-            nn.Linear(n_states, 128),
-            nn.ReLU(),
-            nn.Linear(128, 128),
-            nn.ReLU(),
-            nn.Linear(128, n_actions)
+            nn.Linear(n_states, 64),  # First hidden layer with 64 units
+            nn.ReLU(),  # Activation function
+            nn.Linear(64, 128),  # Second hidden layer with 128 units
+            nn.ReLU(),  # Activation function
+            nn.Linear(128, n_actions)  # Output layer with number of actions
         )
 
-        # Define the optimizer
+        # Define the optimizer for the neural network
         self.optimizer = torch.optim.SGD(self.model.parameters(), lr=alpha)
-        self.criterion = nn.HuberLoss()    
+        # Define the loss criterion
+        self.criterion = nn.HuberLoss()
 
     def forward(self, observation):
-        out = self.model(torch.tensor(observation, dtype=torch.float32))
+        # Forward pass through the network
+        out = self.model(observation)
         return out

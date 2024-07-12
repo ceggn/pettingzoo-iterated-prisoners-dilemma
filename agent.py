@@ -1,47 +1,71 @@
 import torch
 from collections import deque
 import numpy as np
-from model import QLearning  # Assuming this is the correct import path
+from model import QLearning
 
 COOPERATE = 0
 DEFECT = 1
 
 class Agent:
-    def __init__(self, n_states, n_actions, n_games=10, alpha=0.003, epsilon=0.05, gamma=0.99, actions=2) -> None:
-        self.n_games = n_games  # number of games
-        self.alpha = alpha  # learning rate
-        self.epsilon = epsilon  # randomness
-        self.gamma = gamma  # discount rate
-        self.actions = actions
+    def __init__(self, n_states, n_actions, n_games=20, alpha=0.003, epsilon=0.1, gamma=0.99, epsilon_decay=0.99, epsilon_min=0.01) -> None:
+        # Initialize agent parameters
+        self.n_games = n_games  # Number of games
+        self.alpha = alpha  # Learning rate
+        self.epsilon = epsilon  # Exploration rate
+        self.gamma = gamma  # Discount factor
+        self.epsilon_decay = epsilon_decay  # Decay rate for epsilon
+        self.epsilon_min = epsilon_min  # Minimum value for epsilon
+        self.actions = n_actions  # Number of possible actions
 
+        # Initialize Q-learning model
         self.q_learning = QLearning(n_states, n_actions, alpha, gamma, epsilon)
+        
+        # Initialize memory for experience replay
         self.memory = deque(maxlen=10000)
+        
+        # Define batch size for training
         self.batch_size = 64
 
     def choose_action(self, state):
+        # Epsilon-greedy action selection
         if np.random.rand() < self.epsilon:
-            return np.random.randint(self.actions)  # Explore
+            # Explore: choose a random action
+            action = np.random.randint(self.actions)
         else:
-            return np.argmax(self.q_learning.q_table[state])  # Exploit
+            # Exploit: choose the action with the highest Q-value
+            action = np.argmax(self.q_learning.q_table[state])
+        return action
 
     def update(self, state, action, reward, next_state):
+        # Update the Q-table using the Bellman equation
         best_next_action = np.argmax(self.q_learning.q_table[next_state])
         td_target = reward + self.gamma * self.q_learning.q_table[next_state, best_next_action]
         td_error = td_target - self.q_learning.q_table[state, action]
         self.q_learning.q_table[state, action] += self.alpha * td_error
 
     def store_transition(self, state, action, reward, next_state, done):
+        # Store the transition in memory
         self.memory.append((state, action, reward, next_state, done))
 
     def sample_batch(self):
+        # Sample a batch of transitions from memory
         if len(self.memory) < self.batch_size:
             return None
         batch_indices = np.random.choice(len(self.memory), self.batch_size, replace=False)
         batch = [self.memory[idx] for idx in batch_indices]
         states, actions, rewards, next_states, dones = zip(*batch)
-        return np.array(states), np.array(actions), np.array(rewards), np.array(next_states), np.array(dones)
+        
+        # Ensure arrays are converted properly
+        states = np.array(states, dtype=np.float32)
+        actions = np.array(actions, dtype=np.int64)
+        rewards = np.array(rewards, dtype=np.float32)
+        next_states = np.array(next_states, dtype=np.float32)
+        dones = np.array(dones, dtype=np.float32)
+        
+        return states, actions, rewards, next_states, dones
 
-    def train(self, state, action, reward, next_state):
+    def train(self):
+        # Train the Q-learning model using sampled batch
         batch = self.sample_batch()
         if batch is None:
             return
