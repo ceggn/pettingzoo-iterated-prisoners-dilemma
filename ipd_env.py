@@ -93,7 +93,7 @@ class parallel_env(ParallelEnv):
 
         if len(self.agents) == 2:
             string = "Current state: Agent1: {} , Agent2: {}".format(
-                MOVES[self.state[self.agents[0]]], MOVES[self.state[self.agents[1]]]
+                MOVES[self.state[self.agents[0]][0]], MOVES[self.state[self.agents[1]][0]]
             )
         else:
             string = "Game over"
@@ -117,7 +117,7 @@ class parallel_env(ParallelEnv):
         """
         self.agents = self.possible_agents[:]
         self.num_moves = 0
-        observations = {agent: None for agent in self.agents}
+        observations = {agent: [3] for agent in self.agents}
         infos = {agent: {} for agent in self.agents}
         self.state = observations
 
@@ -152,7 +152,7 @@ class parallel_env(ParallelEnv):
 
         # current observation is just the other player's most recent action
         observations = {
-            self.agents[i]: int(actions[self.agents[1 - i]])
+            self.agents[i]: [int(actions[self.agents[1 - i]])]
             for i in range(len(self.agents))
         }
         self.state = observations
