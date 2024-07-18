@@ -1,3 +1,4 @@
+import os
 import ipd_env
 from agent import Agent
 import matplotlib.pyplot as plt
@@ -6,7 +7,6 @@ import torch
 
 # Initialize the environment
 env = ipd_env.parallel_env(render_mode="human")
-
 
 # Define state and action spaces
 n_states = 2  # Number of possible states (example: 2 states)
@@ -18,6 +18,7 @@ agents = {agent_id: Agent(n_states, n_actions) for agent_id in env.possible_agen
 # Lists to store rewards
 rewards_player_1 = []
 rewards_player_2 = []
+combined_rewards = []
 
 # Dictionaries to store actions at each step
 actions_log = {agent_id: [] for agent_id in env.possible_agents}
@@ -25,8 +26,8 @@ actions_log = {agent_id: [] for agent_id in env.possible_agents}
 step = 0
 
 n = 100
-while n > 0 :
-    n-=1
+while n > 0:
+    n -= 1
     observations, infos = env.reset()
     while env.agents:
         actions = {}
@@ -46,8 +47,11 @@ while n > 0 :
 
         # Store rewards for visualization, ensuring indices are valid
         if len(env.agents) >= 2:
-            rewards_player_1.append(rewards[env.agents[0]])
-            rewards_player_2.append(rewards[env.agents[1]])
+            reward_1 = rewards[env.agents[0]]
+            reward_2 = rewards[env.agents[1]]
+            rewards_player_1.append(reward_1)
+            rewards_player_2.append(reward_2)
+            combined_rewards.append(reward_1 + reward_2)
 
         # Store the transitions in memory for each agent
         for agent_id in env.agents:
@@ -58,8 +62,6 @@ while n > 0 :
                 new_observations[agent_id],  # New state after action
                 terminations[agent_id]   # Whether the episode has ended
             )
-
-
 
         # Print step info
         print(f"Step {step}:")
@@ -72,20 +74,17 @@ while n > 0 :
         observations = new_observations
         step += 1
 
-        # Check if we should terminate the loop
-        #if all(terminations.values()) or all(truncations.values()):
-            #break
-
     # Update Q-learning model every 25 steps
     for agent_id in agents.keys():
         agents[agent_id].train()
         agents[agent_id].epsilon = agents[agent_id].epsilon * agents[agent_id].epsilon_decay
         print(agents[agent_id].epsilon)
-    
 
-
+# Set epsilon to 0 for all agents
 for agent_id in agents.keys():
     agents[agent_id].set_epsilon(0)
+
+# Run additional episodes with epsilon set to 0
 for i in range(10):
     observations, infos = env.reset()
     while env.agents:
@@ -106,8 +105,11 @@ for i in range(10):
 
         # Store rewards for visualization, ensuring indices are valid
         if len(env.agents) >= 2:
-            rewards_player_1.append(rewards[env.agents[0]])
-            rewards_player_2.append(rewards[env.agents[1]])
+            reward_1 = rewards[env.agents[0]]
+            reward_2 = rewards[env.agents[1]]
+            rewards_player_1.append(reward_1)
+            rewards_player_2.append(reward_2)
+            combined_rewards.append(reward_1 + reward_2)
 
         # Print step info
         print(f"Step {step}:")
@@ -122,19 +124,24 @@ for i in range(10):
 
 env.close()
 
+# Create a directory to save the figures if it doesn't exist
+output_dir = 'figures'
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
 
 # Plot the rewards
 plt.figure(figsize=(12, 6))
 plt.plot(rewards_player_1, label='Player 1')
 plt.plot(rewards_player_2, label='Player 2')
+plt.plot(combined_rewards, label='Combined Rewards')
 plt.xlabel('Step')
 plt.ylabel('Reward')
 plt.title('Rewards for Both Players Over Time')
 plt.legend()
-plt.savefig("rewards.png")
+plt.savefig(os.path.join(output_dir, "rewards.png"))
 
 # Save actions to a file
-with open('actions_log.json', 'w') as f:
+with open(os.path.join(output_dir, 'actions_log.json'), 'w') as f:
     json.dump(actions_log, f)
 
 print("Actions log saved to actions_log.json")
@@ -161,4 +168,4 @@ axs[1].set_yticks([0, 1])
 axs[1].set_yticklabels(['COOPERATE', 'DEFECT'])
 axs[1].legend()
 
-fig.savefig("actions.png")
+fig.savefig(os.path.join(output_dir, "actions.png"))
