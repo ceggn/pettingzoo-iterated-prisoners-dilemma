@@ -2,14 +2,15 @@ import torch
 from collections import deque
 import numpy as np
 from model import QLearning
+import math
 
 COOPERATE = 0
 DEFECT = 1
 
 class Agent:
-    def __init__(self, n_states, n_actions, n_games=9, alpha=0.003, epsilon=0.1, gamma=0.99, epsilon_decay=0.99, epsilon_min=0.01) -> None:
+    def __init__(self, n_states, n_actions, n_games=25, alpha=0.1, epsilon=0.05, gamma=0.99, epsilon_decay=0.99, epsilon_min=0.01) -> None:
         # Initialize agent parameters
-        self.n_games = n_games  # Number of games
+        self.n_games = n_games  # Number of games 
         self.alpha = alpha  # Learning rate
         self.epsilon = epsilon  # Exploration rate
         self.gamma = gamma  # Discount factor
@@ -21,10 +22,10 @@ class Agent:
         self.q_learning = QLearning(n_states, n_actions, alpha, gamma, epsilon)
         
         # Initialize memory for experience replay
-        self.memory = deque(maxlen=10000)
+        self.memory = deque(maxlen=25)
         
         # Define batch size for training
-        self.batch_size = 2
+        self.batch_size = 25
 
     def choose_action(self, state):
         # Epsilon-greedy action selection
@@ -53,9 +54,15 @@ class Agent:
         # Sample a batch of transitions from memory
         if len(self.memory) < self.batch_size:
             return None
-        batch_indices = np.random.choice(len(self.memory), self.batch_size, replace=False)
+        batch_indices = np.arange(0, len(self.memory))
+        np.random.shuffle(batch_indices)
         batch = [self.memory[idx] for idx in batch_indices]
+        # batch_size elemente , loop
+        # batch[i:]
         states, actions, rewards, next_states, dones = zip(*batch)
+
+        # Erinerungen shufflen in batches unterteile und alle returnen
+        # training for schleife for in batches 
         
         # Ensure arrays are converted properly
         states = np.array(states, dtype=np.float32)
@@ -65,42 +72,47 @@ class Agent:
         dones = np.array(dones, dtype=np.float32)
         
         return states, actions, rewards, next_states, dones
+    
+    def set_epsilon(self, val):
+        self.epsilon = val
+
 
     def train(self):
         # Train the Q-learning model using sampled batch
-        batch = self.sample_batch()
-        if batch is None:
+        batches = self.sample_batch()
+        if batches is None:
             return
 
-        states, actions, rewards, next_states, dones = batch
+        states, actions, rewards, next_states, dones = batches
         states = torch.tensor(states, dtype=torch.float32)
         actions = torch.tensor(actions, dtype=torch.int64).unsqueeze(1)
         rewards = torch.tensor(rewards, dtype=torch.float32).unsqueeze(1)
         next_states = torch.tensor(next_states, dtype=torch.float32)
         dones = torch.tensor(dones, dtype=torch.float32).unsqueeze(1)
 
+        for i in range(math.ceil(len(states)/self.batch_size)):
 
-        # Debugging: Print the shape and contents of the states tensor
-       # print(f"Shape of states tensor: {states.shape}")
-       # print(f"Contents of states tensor: {states}")
+            # Debugging: Print the shape and contents of the states tensor
+            # print(f"Shape of states tensor: {states.shape}")
+            # print(f"Contents of states tensor: {states}")
 
-        # Get the current Q-values for all actions in current states
-        current_q_values = self.q_learning.forward(states)
+            # Get the current Q-values for all actions in current states
+            current_q_values = self.q_learning.forward(states)
 
-        # Select the Q-values corresponding to the actions taken
-        chosen_q_values = current_q_values.gather(1, actions)
+            # Select the Q-values corresponding to the actions taken
+            chosen_q_values = current_q_values.gather(1, actions)
 
-        # Get the Q-values for the next states
-        next_q_values = self.q_learning.forward(next_states)
+            # Get the Q-values for the next states
+            next_q_values = self.q_learning.forward(next_states)
 
-        # Calculate the target Q-values using the Bellman equation
-        max_next_q_values, _ = next_q_values.max(dim=1, keepdim=True)
-        target_q_values = rewards + (self.gamma * max_next_q_values * (1 - dones))
+            # Calculate the target Q-values using the Bellman equation
+            max_next_q_values, _ = next_q_values.max(dim=1, keepdim=True)
+            target_q_values = rewards + (self.gamma * max_next_q_values * (1 - dones))
 
-        # Compute the loss
-        loss = torch.nn.functional.mse_loss(chosen_q_values, target_q_values)
+            # Compute the loss
+            loss = torch.nn.functional.mse_loss(chosen_q_values, target_q_values)
 
-        # Perform a gradient descent step
-        self.q_learning.optimizer.zero_grad()
-        loss.backward()
-        self.q_learning.optimizer.step()
+            # Perform a gradient descent step
+            self.q_learning.optimizer.zero_grad()
+            loss.backward()
+            self.q_learning.optimizer.step()
