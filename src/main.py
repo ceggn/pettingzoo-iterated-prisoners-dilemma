@@ -131,9 +131,9 @@ if not os.path.exists(output_dir):
 
 # Plot the rewards
 plt.figure(figsize=(12, 6))
-plt.plot(rewards_player_1, label='Player 1')
-plt.plot(rewards_player_2, label='Player 2')
-plt.plot(combined_rewards, label='Combined Rewards')
+plt.scatter(range(len(rewards_player_1)), rewards_player_1, label='Player 1', s=10)
+plt.scatter(range(len(rewards_player_2)), rewards_player_2, label='Player 2', s=10)
+plt.scatter(range(len(combined_rewards)), combined_rewards, label='Combined Rewards', s=10)
 plt.xlabel('Step')
 plt.ylabel('Reward')
 plt.title('Rewards for Both Players Over Time')
@@ -154,14 +154,14 @@ fig.suptitle('Actions of Both Players Over Time')
 actions_num_log = {agent_id: [0 if action == "COOPERATE" else 1 for action in actions_log[agent_id]] for agent_id in env.possible_agents}
 
 # Plot actions for player 1
-axs[0].plot(actions_num_log[env.possible_agents[0]], label='Player 1')
+axs[0].scatter(range(len(actions_num_log[env.possible_agents[0]])), actions_num_log[env.possible_agents[0]], label='Player 1', s=10)
 axs[0].set_ylabel('Action')
 axs[0].set_yticks([0, 1])
 axs[0].set_yticklabels(['COOPERATE', 'DEFECT'])
 axs[0].legend()
 
 # Plot actions for player 2
-axs[1].plot(actions_num_log[env.possible_agents[1]], label='Player 2')
+axs[1].scatter(range(len(actions_num_log[env.possible_agents[1]])), actions_num_log[env.possible_agents[1]], label='Player 2', s=10)
 axs[1].set_xlabel('Step')
 axs[1].set_ylabel('Action')
 axs[1].set_yticks([0, 1])
