@@ -2,13 +2,14 @@ import torch
 from collections import deque
 import numpy as np
 from model import QLearning
+from vqc import VQC
 import math
 
 COOPERATE = 0
 DEFECT = 1
 
 class Agent:
-    def __init__(self, n_states, n_actions, n_games=25, alpha=0.1, epsilon=0.05, gamma=0.99, epsilon_decay=0.99, epsilon_min=0.01) -> None:
+    def __init__(self, n_states, n_actions, n_games=25, alpha=0.1, epsilon=0.05, gamma=0.99, epsilon_decay=0.99, epsilon_min=0.01, model ="vqc") -> None:
         # Initialize agent parameters
         self.n_games = n_games  # Number of games 
         self.alpha = alpha  # Learning rate
@@ -17,9 +18,16 @@ class Agent:
         self.epsilon_decay = epsilon_decay  # Decay rate for epsilon
         self.epsilon_min = epsilon_min  # Minimum value for epsilon
         self.actions = n_actions  # Number of possible actions
+        self.model = model
 
-        # Initialize Q-learning model
-        self.q_learning = QLearning(n_states, n_actions, alpha, gamma, epsilon)
+
+        if self.model == "qlearning":
+            # Initialize Q-learning model
+            self.q_learning = QLearning(n_states, n_actions, alpha, gamma, epsilon)
+        if self.model == "vqc":
+            # Initialize the VQC
+            self.vqc = VQC(num_qubits=n_states, num_layers=2, action_space=n_actions)
+
         
         # Initialize memory for experience replay
         self.memory = deque(maxlen=25)
