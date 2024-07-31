@@ -6,7 +6,7 @@ class QLearning(nn.Module):
     def __init__(self, n_states, n_actions, alpha, gamma, epsilon):
         super(QLearning, self).__init__()
         # Initialize the parameters for Q-Learning
-        self.n_states = 1  # Number of states
+        self.n_states = n_states  # Number of states
         self.n_actions = n_actions  # Number of actions
         self.alpha = alpha  # Learning rate
         self.gamma = gamma  # Discount factor
@@ -24,7 +24,7 @@ class QLearning(nn.Module):
         # Define the optimizer for the neural network
         self.optimizer = torch.optim.SGD(self.model.parameters(), lr=alpha)
         # Define the loss criterion
-        self.criterion = nn.HuberLoss()
+        self.criterion = nn.MSELoss()
 
     def forward(self, observation):
         # Forward pass through the network
