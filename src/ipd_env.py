@@ -72,7 +72,7 @@ class parallel_env(ParallelEnv):
     @functools.lru_cache(maxsize=None)
     def observation_space(self, agent):
         # gymnasium spaces are defined and documented here: https://gymnasium.farama.org/api/spaces/
-        return Discrete(2)
+        return Discrete(3, start=-1)
 
     # Action space should be defined here.
     # If your spaces change over time, remove this line (disable caching).
@@ -117,7 +117,7 @@ class parallel_env(ParallelEnv):
         """
         self.agents = self.possible_agents[:]
         self.num_moves = 0
-        observations = {agent: [3] for agent in self.agents}
+        observations = {agent: [-1] for agent in self.agents}
         infos = {agent: {} for agent in self.agents}
         self.state = observations
 

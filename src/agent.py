@@ -2,13 +2,14 @@ import torch
 from collections import deque
 import numpy as np
 from model import QLearning
+from vqc import VQC
 import math
 
 COOPERATE = 0
 DEFECT = 1
 
 class Agent:
-    def __init__(self, n_states, n_actions, n_games=25, alpha=0.1, epsilon=0.05, gamma=0.99, epsilon_decay=0.99, epsilon_min=0.01) -> None:
+    def __init__(self, observation_length, n_actions, n_games=25, alpha=0.1, epsilon=0.05, gamma=0.99, epsilon_decay=0.99, epsilon_min=0.01, model_type ="vqc") -> None:
         # Initialize agent parameters
         self.n_games = n_games  # Number of games 
         self.alpha = alpha  # Learning rate
@@ -17,9 +18,16 @@ class Agent:
         self.epsilon_decay = epsilon_decay  # Decay rate for epsilon
         self.epsilon_min = epsilon_min  # Minimum value for epsilon
         self.actions = n_actions  # Number of possible actions
+        self.model_type = model_type
 
-        # Initialize Q-learning model
-        self.q_learning = QLearning(n_states, n_actions, alpha, gamma, epsilon)
+
+        if self.model_type == "q_learning":
+            # Initialize Q-learning model
+            self.model = QLearning(observation_length, n_actions, alpha, gamma, epsilon)
+        if self.model_type == "vqc":
+            # Initialize the VQC
+            self.model = VQC(num_qubits=observation_length, num_layers=2, action_space=n_actions)
+
         
         # Initialize memory for experience replay
         self.memory = deque(maxlen=25)
@@ -35,16 +43,16 @@ class Agent:
         else:
             # Exploit: choose the action with the highest Q-value
             state = torch.tensor([state],dtype=torch.float32)
-            q_values = self.q_learning.forward(state)
+            q_values = self.model.forward(state)
             action = torch.argmax(q_values).item()
         return action
 
     def update(self, state, action, reward, next_state):
         # Update the Q-table using the Bellman equation
-        best_next_action = np.argmax(self.q_learning.q_table[next_state])
-        td_target = reward + self.gamma * self.q_learning.q_table[next_state, best_next_action]
-        td_error = td_target - self.q_learning.q_table[state, action]
-        self.q_learning.q_table[state, action] += self.alpha * td_error
+        best_next_action = np.argmax(self.model.q_table[next_state])
+        td_target = reward + self.gamma * self.model.q_table[next_state, best_next_action]
+        td_error = td_target - self.model.q_table[state, action]
+        self.model.q_table[state, action] += self.alpha * td_error
 
     def store_transition(self, state, action, reward, next_state, done):
         # Store the transition in memory
@@ -97,13 +105,13 @@ class Agent:
             # print(f"Contents of states tensor: {states}")
 
             # Get the current Q-values for all actions in current states
-            current_q_values = self.q_learning.forward(states)
+            current_q_values = self.model.forward(states)
 
             # Select the Q-values corresponding to the actions taken
             chosen_q_values = current_q_values.gather(1, actions)
 
             # Get the Q-values for the next states
-            next_q_values = self.q_learning.forward(next_states)
+            next_q_values = self.model.forward(next_states)
 
             # Calculate the target Q-values using the Bellman equation
             max_next_q_values, _ = next_q_values.max(dim=1, keepdim=True)
@@ -113,6 +121,6 @@ class Agent:
             loss = torch.nn.functional.mse_loss(chosen_q_values, target_q_values)
 
             # Perform a gradient descent step
-            self.q_learning.optimizer.zero_grad()
+            self.model.optimizer.zero_grad()
             loss.backward()
-            self.q_learning.optimizer.step()
+            self.model.optimizer.step()

@@ -9,11 +9,11 @@ import torch
 env = ipd_env.parallel_env(render_mode="human")
 
 # Define state and action spaces
-n_states = 2  # Number of possible states (example: 2 states)
+observation_length = 1  # Length of observations (example: 1 observation)
 n_actions = 2  # Number of possible actions (example: 2 actions)
 
 # Initialize agents for each possible agent in the environment
-agents = {agent_id: Agent(n_states, n_actions) for agent_id in env.possible_agents}
+agents = {agent_id: Agent(observation_length, n_actions) for agent_id in env.possible_agents}
 
 # Lists to store rewards
 rewards_player_1 = []
