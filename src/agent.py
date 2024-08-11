@@ -9,7 +9,7 @@ COOPERATE = 0
 DEFECT = 1
 
 class Agent:
-    def __init__(self, observation_length, n_actions, n_games=25, alpha=0.1, epsilon=0.05, gamma=0.99, epsilon_decay=0.99, epsilon_min=0.01, model_type ="vqc") -> None:
+    def __init__(self, observation_length, n_actions, n_games=25, alpha=0.1, epsilon=0.05, gamma=0.99, epsilon_decay=0.99, epsilon_min=0.01, model_type="vqc") -> None:
         # Initialize agent parameters
         self.n_games = n_games  # Number of games 
         self.alpha = alpha  # Learning rate
@@ -20,15 +20,13 @@ class Agent:
         self.actions = n_actions  # Number of possible actions
         self.model_type = model_type
 
-
         if self.model_type == "q_learning":
             # Initialize Q-learning model
             self.model = QLearning(observation_length, n_actions, alpha, gamma, epsilon)
-        if self.model_type == "vqc":
+        elif self.model_type == "vqc":
             # Initialize the VQC
             self.model = VQC(num_qubits=observation_length, num_layers=2, action_space=n_actions)
 
-        
         # Initialize memory for experience replay
         self.memory = deque(maxlen=25)
         
@@ -42,7 +40,7 @@ class Agent:
             action = np.random.randint(self.actions)
         else:
             # Exploit: choose the action with the highest Q-value
-            state = torch.tensor([state],dtype=torch.float32)
+            state = torch.tensor([state], dtype=torch.float32)
             q_values = self.model.forward(state)
             action = torch.argmax(q_values).item()
         return action
@@ -65,13 +63,9 @@ class Agent:
         batch_indices = np.arange(0, len(self.memory))
         np.random.shuffle(batch_indices)
         batch = [self.memory[idx] for idx in batch_indices]
-        # batch_size elemente , loop
-        # batch[i:]
+        
         states, actions, rewards, next_states, dones = zip(*batch)
 
-        # Erinerungen shufflen in batches unterteile und alle returnen
-        # training for schleife for in batches 
-        
         # Ensure arrays are converted properly
         states = np.array(states, dtype=np.float32)
         actions = np.array(actions, dtype=np.int64)
@@ -84,43 +78,50 @@ class Agent:
     def set_epsilon(self, val):
         self.epsilon = val
 
-
     def train(self):
-        # Train the Q-learning model using sampled batch
-        batches = self.sample_batch()
-        if batches is None:
-            return
+        if self.model_type == "q_learning":
+            # Train the Q-learning model using sampled batch
+            batches = self.sample_batch()
+            if batches is None:
+                return
 
-        states, actions, rewards, next_states, dones = batches
-        states = torch.tensor(states, dtype=torch.float32)
-        actions = torch.tensor(actions, dtype=torch.int64).unsqueeze(1)
-        rewards = torch.tensor(rewards, dtype=torch.float32).unsqueeze(1)
-        next_states = torch.tensor(next_states, dtype=torch.float32)
-        dones = torch.tensor(dones, dtype=torch.float32).unsqueeze(1)
+            states, actions, rewards, next_states, dones = batches
+            states = torch.tensor(states, dtype=torch.float32)
+            actions = torch.tensor(actions, dtype=torch.int64).unsqueeze(1)
+            rewards = torch.tensor(rewards, dtype=torch.float32).unsqueeze(1)
+            next_states = torch.tensor(next_states, dtype=torch.float32)
+            dones = torch.tensor(dones, dtype=torch.float32).unsqueeze(1)
 
-        for i in range(math.ceil(len(states)/self.batch_size)):
+            for i in range(math.ceil(len(states)/self.batch_size)):
+                current_q_values = self.model.forward(states)
+                chosen_q_values = current_q_values.gather(1, actions)
+                next_q_values = self.model.forward(next_states)
+                max_next_q_values, _ = next_q_values.max(dim=1, keepdim=True)
+                target_q_values = rewards + (self.gamma * max_next_q_values * (1 - dones))
+                loss = torch.nn.functional.mse_loss(chosen_q_values, target_q_values)
+                self.model.optimizer.zero_grad()
+                loss.backward()
+                self.model.optimizer.step()
 
-            # Debugging: Print the shape and contents of the states tensor
-            # print(f"Shape of states tensor: {states.shape}")
-            # print(f"Contents of states tensor: {states}")
+        elif self.model_type == "vqc":
+            # Train the VQC model using the integrated logic
+            batches = self.sample_batch()
+            if batches is None:
+                return
 
-            # Get the current Q-values for all actions in current states
-            current_q_values = self.model.forward(states)
+            states, actions, rewards, next_states, dones = batches
+            states = torch.tensor(states, dtype=torch.float32)
+            actions = torch.tensor(actions, dtype=torch.int64).unsqueeze(1)
+            rewards = torch.tensor(rewards, dtype=torch.float32).unsqueeze(1)
+            next_states = torch.tensor(next_states, dtype=torch.float32)
+            dones = torch.tensor(dones, dtype=torch.float32).unsqueeze(1)
 
-            # Select the Q-values corresponding to the actions taken
-            chosen_q_values = current_q_values.gather(1, actions)
+            # Integrated train_model logic
+            current_q_values = self.model.forward(states).gather(1, actions)
+            next_q_values = self.model.forward(next_states).max(1)[0].detach().unsqueeze(1)
+            target_q_values = rewards + (self.gamma * next_q_values * (1 - dones))
+            loss = torch.nn.functional.mse_loss(current_q_values, target_q_values)
 
-            # Get the Q-values for the next states
-            next_q_values = self.model.forward(next_states)
-
-            # Calculate the target Q-values using the Bellman equation
-            max_next_q_values, _ = next_q_values.max(dim=1, keepdim=True)
-            target_q_values = rewards + (self.gamma * max_next_q_values * (1 - dones))
-
-            # Compute the loss
-            loss = torch.nn.functional.mse_loss(chosen_q_values, target_q_values)
-
-            # Perform a gradient descent step
             self.model.optimizer.zero_grad()
             loss.backward()
             self.model.optimizer.step()
