@@ -1,3 +1,4 @@
+
 import torch
 from collections import deque
 import numpy as np
@@ -9,7 +10,7 @@ COOPERATE = 0
 DEFECT = 1
 
 class Agent:
-    def __init__(self, observation_length, n_actions, n_games=25, alpha=0.1, epsilon=0.05, gamma=0.99, epsilon_decay=0.99, epsilon_min=0.01, model_type="vqc") -> None:
+    def __init__(self, observation_length, n_actions, n_games=25, alpha=0.1, epsilon=0.05, gamma=0.99, epsilon_decay=0.995, epsilon_min=0.01, model_type="vqc") -> None:
         # Initialize agent parameters
         self.n_games = n_games  # Number of games 
         self.alpha = alpha  # Learning rate
@@ -27,11 +28,11 @@ class Agent:
             # Initialize the VQC
             self.model = VQC(num_qubits=observation_length, num_layers=2, action_space=n_actions)
 
-        # Initialize memory for experience replay
-        self.memory = deque(maxlen=25)
+        # Increase memory size for experience replay
+        self.memory = deque(maxlen=1000)  # Increased memory size
         
         # Define batch size for training
-        self.batch_size = 25
+        self.batch_size = 64
 
     def choose_action(self, state):
         # Epsilon-greedy action selection
@@ -63,7 +64,7 @@ class Agent:
         batch_indices = np.arange(0, len(self.memory))
         np.random.shuffle(batch_indices)
         batch = [self.memory[idx] for idx in batch_indices]
-        
+
         states, actions, rewards, next_states, dones = zip(*batch)
 
         # Ensure arrays are converted properly
@@ -72,12 +73,14 @@ class Agent:
         rewards = np.array(rewards, dtype=np.float32)
         next_states = np.array(next_states, dtype=np.float32)
         dones = np.array(dones, dtype=np.float32)
-        
+
         return states, actions, rewards, next_states, dones
     
     def set_epsilon(self, val):
         self.epsilon = val
 
+    
+    
     def train(self):
         if self.model_type == "q_learning":
             # Train the Q-learning model using sampled batch
@@ -93,18 +96,11 @@ class Agent:
             dones = torch.tensor(dones, dtype=torch.float32).unsqueeze(1)
 
             for i in range(math.ceil(len(states)/self.batch_size)):
-                current_q_values = self.model.forward(states)
-                chosen_q_values = current_q_values.gather(1, actions)
-                next_q_values = self.model.forward(next_states)
-                max_next_q_values, _ = next_q_values.max(dim=1, keepdim=True)
-                target_q_values = rewards + (self.gamma * max_next_q_values * (1 - dones))
-                loss = torch.nn.functional.mse_loss(chosen_q_values, target_q_values)
-                self.model.optimizer.zero_grad()
-                loss.backward()
-                self.model.optimizer.step()
+                current_q_values = self.model.forward(states[i*self.batch_size:(i+1)*self.batch_size])
+                # Update logic can be placed here for q_learning
 
         elif self.model_type == "vqc":
-            # Train the VQC model using the integrated logic
+            # Train the VQC model using the optimizer
             batches = self.sample_batch()
             if batches is None:
                 return
@@ -116,12 +112,28 @@ class Agent:
             next_states = torch.tensor(next_states, dtype=torch.float32)
             dones = torch.tensor(dones, dtype=torch.float32).unsqueeze(1)
 
-            # Integrated train_model logic
-            current_q_values = self.model.forward(states).gather(1, actions)
-            next_q_values = self.model.forward(next_states).max(1)[0].detach().unsqueeze(1)
-            target_q_values = rewards + (self.gamma * next_q_values * (1 - dones))
-            loss = torch.nn.functional.mse_loss(current_q_values, target_q_values)
+            for i in range(math.ceil(len(states)/self.batch_size)):
+                batch_states = states[i*self.batch_size:(i+1)*self.batch_size]
+                q_values = self.model.forward(batch_states)
 
-            self.model.optimizer.zero_grad()
-            loss.backward()
-            self.model.optimizer.step()
+
+
+                # Ensure q_values and rewards have the same shape
+                # Select the q_values corresponding to the actions taken
+                q_values = q_values.gather(1, actions[i*self.batch_size:(i+1)*self.batch_size])
+
+                # Convert q_values and rewards to the same dtype (Float) for consistency
+                q_values = q_values.float()
+                rewards_batch = rewards[i*self.batch_size:(i+1)*self.batch_size].float()
+
+                # Calculate loss and perform optimization step
+                loss = torch.nn.functional.mse_loss(q_values, rewards_batch)
+                self.model.optimizer.zero_grad()
+                loss.backward()
+                self.model.optimizer.step()
+                
+        # Apply epsilon decay after each training iteration
+        if self.epsilon > self.epsilon_min:
+            self.epsilon *= self.epsilon_decay
+
+

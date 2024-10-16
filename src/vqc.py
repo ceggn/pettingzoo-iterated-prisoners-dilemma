@@ -17,12 +17,13 @@ class VQC(nn.Module):
         self.qnode = qml.QNode(self.circuit, self.device, interface="torch")
 
         self.weights = nn.Parameter(
-            0.01 * torch.randn(num_layers, self.num_qubits, 3)
+            torch.randn(num_layers, self.num_qubits, 3)
         )
         self.optimizer = torch.optim.Adam(self.parameters(), lr=0.01)
         
     def circuit(self, weights, x):
-        qml.AmplitudeEmbedding(features=x, wires=range(self.num_qubits), pad_with=0, normalize=True)
+        #qml.AmplitudeEmbedding(features=x, wires=range(self.num_qubits), pad_with=0, normalize=True)
+        qml.BasisEmbedding(features=x, wires=range(self.num_qubits))
         for i in range(self.num_layers):
             for j in range(self.num_qubits):
                 qml.Rot(*weights[i, j], wires=j)
@@ -35,10 +36,11 @@ class VQC(nn.Module):
         # Ensure x is the correct shape expected by the quantum circuit
         if len(x.shape) == 1:
             x = x.unsqueeze(0)
-        
-        q_vals = self.qnode(self.weights, x)
-        
+        x = torch.cat((x,torch.zeros(x.size())), dim=1)
+    
+        q_vals = torch.stack([torch.stack(self.qnode(self.weights, i)) for i in x])
+        # q_vals = self.qnode(self.weights, x)
         # Convert q_vals (which is a list of tensors) to a single torch tensor
-        q_vals = torch.stack(q_vals, dim=1)
+        #q_vals = torch.stack(q_vals, dim=1)
         
         return q_vals

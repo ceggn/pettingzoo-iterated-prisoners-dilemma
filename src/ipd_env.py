@@ -1,5 +1,5 @@
 import functools
-
+import random
 import gymnasium
 from gymnasium.spaces import Discrete
 
@@ -117,7 +117,7 @@ class parallel_env(ParallelEnv):
         """
         self.agents = self.possible_agents[:]
         self.num_moves = 0
-        observations = {agent: [-1] for agent in self.agents}
+        observations = {agent: [random.randint(0,1)] for agent in self.agents}
         infos = {agent: {} for agent in self.agents}
         self.state = observations
 
