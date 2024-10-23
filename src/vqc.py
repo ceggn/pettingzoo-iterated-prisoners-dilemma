@@ -22,9 +22,9 @@ class VQC(nn.Module):
         self.optimizer = torch.optim.Adam(self.parameters(), lr=0.01)
         
     def circuit(self, weights, x):
-        #qml.AmplitudeEmbedding(features=x, wires=range(self.num_qubits), pad_with=0, normalize=True)
-        qml.BasisEmbedding(features=x, wires=range(self.num_qubits))
         for i in range(self.num_layers):
+            #qml.AmplitudeEmbedding(features=x, wires=range(self.num_qubits), pad_with=0, normalize=True)
+            qml.BasisEmbedding(features=x, wires=range(self.num_qubits))
             for j in range(self.num_qubits):
                 qml.Rot(*weights[i, j], wires=j)
             for j in range(self.num_qubits - 1):

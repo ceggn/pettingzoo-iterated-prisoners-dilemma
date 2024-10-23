@@ -147,7 +147,7 @@ class parallel_env(ParallelEnv):
         terminations = {agent: False for agent in self.agents}
 
         self.num_moves += 1
-        env_truncation = self.num_moves >= NUM_ITERS
+        env_truncation = self.num_moves >= (NUM_ITERS + 1)
         truncations = {agent: env_truncation for agent in self.agents}
 
         # current observation is just the other player's most recent action
