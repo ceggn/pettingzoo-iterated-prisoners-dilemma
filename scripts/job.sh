@@ -6,14 +6,16 @@
 # Use sinfo to see all availiable partitions
 # For LMU Cip SLURM, use --partition=NvidiaAll if you need nodes with a gpu
 
-#SBATCH --mail-user=<INSERT YOUR EMAIL HERE>
-#SBATCH --mail-type=FAIL
+#SBATCH --mail-user=<Marvin.Heinrich@campus.lmu.de>
+#SBATCH --mail-type=FAIL,END
 #SBATCH --partition=All
 #SBATCH --export=NONE
 
 # Environment Variables
 # export WANDB_MODE="disabled" # Use if you want to disable wandb logging
 export WANDB_SILENT="true"
+export PYENV_ROOT="$HOME/.pyenv"
+command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
 
 # Check if pyenv is installed
 if command -v pyenv 1>/dev/null 2>&1; then
