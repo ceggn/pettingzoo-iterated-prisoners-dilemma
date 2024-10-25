@@ -4,6 +4,7 @@ from agent import Agent
 import numpy as np
 import torch as T
 import json
+import argparse
 
 NUM_GAMES_PER_SEGMENT = 25
 
@@ -27,7 +28,7 @@ def run_single_game(seed):
     actions = {agent_id: [] for agent_id in env.possible_agents}
 
     # Game loop for 100 steps
-    n = 500
+    n = 10
     while n > 0:
         n -= 1
         observations, infos = env.reset()
@@ -54,15 +55,15 @@ def run_single_game(seed):
 
         for i in agents.values(): i.train()
 
-        print("")
+        print("Game: ", n)
 
-    env.close("Game: ", n)
+    env.close()
 
     return rewards_p1, rewards_p2, actions
 
 
 # Function to run multiple games and calculate average rewards per 25-game segment
-def run_multiple_games(num_runs, output_dir):
+def run_multiple_games(num_runs, output_dir, seed):
     all_runs_rewards = {}
 
     for i in range(num_runs):
@@ -100,10 +101,14 @@ def run_multiple_games(num_runs, output_dir):
 
 # Main function to execute multiple runs and save rewards and actions
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="idp")
+    parser.add_argument("-s", type=int, help="Seeding")
+    args = parser.parse_args()
+    seed = args.s        
     num_runs = 2  # Number of runs to perform
-    output_dir = "results"
+    output_dir = "results_" + str(seed)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
     # Run multiple games and save results
-    run_multiple_games(num_runs, output_dir)
+    run_multiple_games(1, output_dir, seed)
