@@ -26,7 +26,7 @@ class Agent:
             self.model = QLearning(observation_length, n_actions, alpha, gamma, epsilon)
         elif self.model_type == "vqc":
             # Initialize the VQC
-            self.model = VQC(num_qubits=observation_length, num_layers=2, action_space=n_actions)
+            self.model = VQC(observation_length=observation_length, num_layers=4, action_space=n_actions)
 
         # Increase memory size for experience replay
         self.memory = deque(maxlen=1000)  # Increased memory size

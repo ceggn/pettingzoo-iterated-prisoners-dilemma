@@ -27,7 +27,7 @@ def run_single_game(seed):
     actions = {agent_id: [] for agent_id in env.possible_agents}
 
     # Game loop for 100 steps
-    n = 100
+    n = 500
     while n > 0:
         n -= 1
         observations, infos = env.reset()
@@ -41,10 +41,22 @@ def run_single_game(seed):
 
             for agent_id in env.agents:
                 actions[agent_id].append(actions_step[agent_id])
+                # Store transitions in memory for each agent
+                agents[agent_id].store_transition(
+                observations[agent_id],  # Current state
+                actions_step[agent_id],  # Action taken
+                rewards[agent_id],       # Reward received
+                new_observations[agent_id],  # New state after action
+                terminations[agent_id]   # Whether the episode has ended
+            )
 
             observations = new_observations
 
-    env.close()
+        for i in agents.values(): i.train()
+
+        print("")
+
+    env.close("Game: ", n)
 
     return rewards_p1, rewards_p2, actions
 
@@ -88,7 +100,7 @@ def run_multiple_games(num_runs, output_dir):
 
 # Main function to execute multiple runs and save rewards and actions
 if __name__ == "__main__":
-    num_runs = 10  # Number of runs to perform
+    num_runs = 2  # Number of runs to perform
     output_dir = "results"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
