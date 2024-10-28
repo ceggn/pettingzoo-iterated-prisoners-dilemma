@@ -13,15 +13,11 @@ else
   sbatch_cmd=""
 fi
 
-for dataset in ${datasets[@]}; do
-    for approach in ${approaches[@]}; do
-        for seed in $(seq 0 $(($runs-1))); do
-            if [ -z "$sbatch_cmd" ]; then
-                echo "\033[1;32mExecuting job with environment variables:\033[0m -s $seed"
-                ./scripts/job.sh -s $seed 
-            else
-                $sbatch_cmd --job-name="run-$dataset-$approach-$seed" scripts/job.sh -s $seed
-            fi
-        done
-    done
+for seed in $(seq 0 $(($runs-1))); do
+    if [ -z "$sbatch_cmd" ]; then
+        echo "\033[1;32mExecuting job with environment variables:\033[0m -s $seed"
+        ./scripts/job.sh -s $seed 
+    else
+        $sbatch_cmd --job-name="run-$dataset-$approach-$seed" scripts/job.sh -s $seed
+    fi
 done

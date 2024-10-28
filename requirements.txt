@@ -1,5 +1,6 @@
-matplotlib
-numpy
-torch
-pettingzoo
-gymnasium
+gymnasium==0.29.1
+matplotlib==3.9.2
+numpy==2.1.2
+PennyLane==0.36.0
+pettingzoo==1.24.3
+torch==2.2.2
