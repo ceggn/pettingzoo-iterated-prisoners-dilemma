@@ -1,36 +1,41 @@
 import os
 import json
+import numpy as np
 import matplotlib.pyplot as plt
 
+NUM_GAMES_PER_SEGMENT = 25
+
 def calculate_average_across_runs(input_file):
-    # Load the detailed rewards data from the JSON file
+    # Load the complete rewards data from the JSON file
     with open(input_file, 'r') as f:
-        all_runs_avg_rewards = json.load(f)
+        all_runs_rewards = json.load(f)
 
-    # Number of runs
-    num_runs = len(all_runs_avg_rewards)
+    num_runs = len(all_runs_rewards)
 
-    # Assume all runs have the same number of segments
-    num_segments = len(next(iter(all_runs_avg_rewards.values()))["Player_1_Average_Rewards"])
+    # Number of segments based on the assumption that each run has a consistent length
+    total_games = len(next(iter(all_runs_rewards.values()))["Player_1_Rewards"])
+    num_segments = total_games // NUM_GAMES_PER_SEGMENT
 
-    # Initialize sums for each segment
+    # Initialize lists to accumulate rewards across runs
     sum_rewards_p1 = [0] * num_segments
     sum_rewards_p2 = [0] * num_segments
 
-    # Accumulate the rewards across all runs
-    for rewards in all_runs_avg_rewards.values():
-        player_1_avg_rewards = rewards["Player_1_Average_Rewards"]
-        player_2_avg_rewards = rewards["Player_2_Average_Rewards"]
+    # Accumulate the rewards for each segment across all runs
+    for rewards in all_runs_rewards.values():
+        player_1_rewards = rewards["Player_1_Rewards"]
+        player_2_rewards = rewards["Player_2_Rewards"]
 
-        for i in range(num_segments):
-            sum_rewards_p1[i] += player_1_avg_rewards[i]
-            sum_rewards_p2[i] += player_2_avg_rewards[i]
+        for segment in range(num_segments):
+            start = segment * NUM_GAMES_PER_SEGMENT
+            end = start + NUM_GAMES_PER_SEGMENT
+
+            # Calculate the sum for each segment
+            sum_rewards_p1[segment] += np.mean(player_1_rewards[start:end])
+            sum_rewards_p2[segment] += np.mean(player_2_rewards[start:end])
 
     # Calculate the average for each segment
     avg_rewards_p1 = [s / num_runs for s in sum_rewards_p1]
     avg_rewards_p2 = [s / num_runs for s in sum_rewards_p2]
-
-    # Calculate the sum of the average rewards for both players
     sum_avg_rewards = [avg_rewards_p1[i] + avg_rewards_p2[i] for i in range(num_segments)]
 
     return avg_rewards_p1, avg_rewards_p2, sum_avg_rewards
@@ -56,7 +61,7 @@ def plot_average_rewards_across_all_runs(input_file, output_dir):
     plt.close()
 
 if __name__ == "__main__":
-    input_file = os.path.join("results", "average_rewards_per_25_game_segment.json")
+    input_file = os.path.join("results", "complete_rewards.json")
     output_dir = "results"
 
     if not os.path.exists(output_dir):

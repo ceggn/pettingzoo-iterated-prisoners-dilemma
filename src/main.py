@@ -6,8 +6,6 @@ import torch as T
 import json
 import argparse
 
-NUM_GAMES_PER_SEGMENT = 25
-
 # Function to run a single game and return rewards and actions
 def run_single_game(seed):
     np.random.seed(seed)
@@ -28,7 +26,7 @@ def run_single_game(seed):
     actions = {agent_id: [] for agent_id in env.possible_agents}
 
     # Game loop for 100 steps
-    n = 10
+    n = 100  # For a full game
     while n > 0:
         n -= 1
         observations, infos = env.reset()
@@ -44,25 +42,23 @@ def run_single_game(seed):
                 actions[agent_id].append(actions_step[agent_id])
                 # Store transitions in memory for each agent
                 agents[agent_id].store_transition(
-                observations[agent_id],  # Current state
-                actions_step[agent_id],  # Action taken
-                rewards[agent_id],       # Reward received
-                new_observations[agent_id],  # New state after action
-                terminations[agent_id]   # Whether the episode has ended
-            )
+                    observations[agent_id],
+                    actions_step[agent_id],
+                    rewards[agent_id],
+                    new_observations[agent_id],
+                    terminations[agent_id]
+                )
 
             observations = new_observations
 
-        for i in agents.values(): i.train()
-
-        print("Game: ", n)
+        for agent in agents.values():
+            agent.train()
 
     env.close()
-
     return rewards_p1, rewards_p2, actions
 
 
-# Function to run multiple games and calculate average rewards per 25-game segment
+# Function to run multiple games and save complete logs of rewards
 def run_multiple_games(num_runs, output_dir, seed):
     all_runs_rewards = {}
 
@@ -70,30 +66,14 @@ def run_multiple_games(num_runs, output_dir, seed):
         seed = i + 1
         rewards_p1, rewards_p2, _ = run_single_game(seed)
 
-        # Group the rewards into segments of 25 games
-        avg_rewards_p1 = []
-        avg_rewards_p2 = []
-
-        for start in range(0, len(rewards_p1), NUM_GAMES_PER_SEGMENT):
-            end = start + NUM_GAMES_PER_SEGMENT
-            segment_p1 = rewards_p1[start:end]
-            segment_p2 = rewards_p2[start:end]
-
-            # Calculate the average reward for each segment
-            avg_reward_p1 = np.mean(segment_p1) if segment_p1 else 0
-            avg_reward_p2 = np.mean(segment_p2) if segment_p2 else 0
-
-            avg_rewards_p1.append(avg_reward_p1)
-            avg_rewards_p2.append(avg_reward_p2)
-
-        # Store the average rewards for this run
+        # Store the full rewards for this run
         all_runs_rewards[f"Run_{i + 1}"] = {
-            "Player_1_Average_Rewards": avg_rewards_p1,
-            "Player_2_Average_Rewards": avg_rewards_p2
+            "Player_1_Rewards": rewards_p1,
+            "Player_2_Rewards": rewards_p2
         }
 
-    # Save the detailed rewards data to a JSON file
-    with open(os.path.join(output_dir, "average_rewards_per_25_game_segment.json"), 'w') as f:
+    # Save the complete rewards data to a JSON file
+    with open(os.path.join(output_dir, "complete_rewards.json"), 'w') as f:
         json.dump(all_runs_rewards, f, indent=4)
 
     return all_runs_rewards
@@ -104,11 +84,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="idp")
     parser.add_argument("-s", type=int, help="Seeding")
     args = parser.parse_args()
-    seed = args.s        
+    seed = args.s
     num_runs = 2  # Number of runs to perform
     output_dir = "results_" + str(seed)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    # Run multiple games and save results
-    run_multiple_games(1, output_dir, seed)
+    # Run multiple games and save complete logs
+    run_multiple_games(num_runs, output_dir, seed)
