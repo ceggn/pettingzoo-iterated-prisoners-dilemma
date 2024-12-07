@@ -113,7 +113,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
     seed = args.s
     num_runs = 2  # Number of runs to perform
-    output_dir = "results_" + str(seed)
+    
+    if approach == "combined_vqc":
+        output_dir = "results_combined_" + str(seed)
+    else:
+        output_dir = "results_" + str(seed)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
