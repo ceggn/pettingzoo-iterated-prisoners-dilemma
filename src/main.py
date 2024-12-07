@@ -1,10 +1,14 @@
 import os
 import ipd_env
 from agent import Agent
+from agent_combined import Combined_Agents
 import numpy as np
 import torch as T
 import json
 import argparse
+
+#TODO: handle with Argparse
+approach = "combined_vqc"
 
 # Function to run a single game and return rewards and actions
 def run_single_game(seed):
@@ -19,7 +23,10 @@ def run_single_game(seed):
     n_actions = 2
 
     # Initialize agents for each possible agent in the environment
-    agents = {agent_id: Agent(observation_length, n_actions) for agent_id in env.possible_agents}
+    if approach == "combined_vqc":
+        combined_agents = Combined_Agents(env.possible_agents, observation_length, n_actions)
+    else:
+        agents = {agent_id: Agent(observation_length, n_actions) for agent_id in env.possible_agents}
 
     rewards_p1 = []
     rewards_p2 = []
@@ -31,7 +38,11 @@ def run_single_game(seed):
         n -= 1
         observations, infos = env.reset()
         while env.agents:
-            actions_step = {agent_id: agents[agent_id].choose_action(observations[agent_id]) for agent_id in env.agents}
+            if approach == "combined_vqc":
+                actions_step = combined_agents.choose_actions(observations)
+            else: 
+                actions_step = {agent_id: agents[agent_id].choose_action(observations[agent_id]) for agent_id in env.agents}
+            
             new_observations, rewards, terminations, truncations, infos = env.step(actions_step)
 
             if len(env.agents) >= 2:
@@ -41,18 +52,34 @@ def run_single_game(seed):
             for agent_id in env.agents:
                 actions[agent_id].append(actions_step[agent_id])
                 # Store transitions in memory for each agent
-                agents[agent_id].store_transition(
+                if approach =="combined_vqc":
+                    combined_agents.store_transition(
                     observations[agent_id],
                     actions_step[agent_id],
                     rewards[agent_id],
                     new_observations[agent_id],
-                    terminations[agent_id]
-                )
+                    terminations[agent_id],
+                    agent_id
+                    )
+
+                else:    
+                    agents[agent_id].store_transition(
+                        observations[agent_id],
+                        actions_step[agent_id],
+                        rewards[agent_id],
+                        new_observations[agent_id],
+                        terminations[agent_id]
+                    )
 
             observations = new_observations
 
-        for agent in agents.values():
-            agent.train()
+
+        if approach == "combined_vqc":
+
+            combined_agents.train()
+        else: 
+            for agent in agents.values():
+                agent.train()
 
     env.close()
     return rewards_p1, rewards_p2, actions
