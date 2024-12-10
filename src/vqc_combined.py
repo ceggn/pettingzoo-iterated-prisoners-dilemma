@@ -32,14 +32,15 @@ class VQC_Combined(nn.Module):
         self.optimizer = torch.optim.Adam([{"params": self.weights},{"params": self.expected_val_scaling, "lr": 0.1}], lr=0.001)
         
     def circuit(self, weights, x1, x2):
+        qml.BasisEmbedding(features=x1, wires=range(self.observation_length))
+        qml.BasisEmbedding(features=x2, wires=range(self.observation_length, 2*self.observation_length))
+
         for i in range(self.num_layers):
-            qml.BasisEmbedding(features=x1, wires=range(self.observation_length))
-            qml.BasisEmbedding(features=x2, wires=range(self.observation_length, 2*self.observation_length))
             for j in range(self.num_qubits):
                 qml.Rot(*weights[i, j], wires=j)
-            for j in range(self.num_qubits - 1):
-                qml.CNOT(wires=[j, j+1])
-                # TODO entanglement Ring?
+
+            qml.CNOT(wires=[0, 1])
+            qml.CNOT(wires=[2, 3])
 
         return [qml.expval(qml.PauliZ(i)) for i in range(self.action_space)]
     

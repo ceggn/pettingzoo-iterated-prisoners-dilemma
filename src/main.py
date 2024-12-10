@@ -14,6 +14,7 @@ approach = "combined_vqc"
 def run_single_game(seed):
     np.random.seed(seed)
     T.manual_seed(seed)
+    random.seed(seed)
 
     # Initialize the environment
     env = ipd_env.parallel_env(render_mode="human")
@@ -36,7 +37,7 @@ def run_single_game(seed):
     n = 100  # For a full game
     while n > 0:
         n -= 1
-        observations, infos = env.reset()
+        observations, infos = env.reset(seed=seed)
         while env.agents:
             if approach == "combined_vqc":
                 actions_step = combined_agents.choose_actions(observations)
@@ -90,8 +91,8 @@ def run_multiple_games(num_runs, output_dir, seed):
     all_runs_rewards = {}
 
     for i in range(num_runs):
-        seed = i + 1
-        rewards_p1, rewards_p2, _ = run_single_game(seed)
+        current_seed = seed + i
+        rewards_p1, rewards_p2, _ = run_single_game(current_seed)
 
         # Store the full rewards for this run
         all_runs_rewards[f"Run_{i + 1}"] = {
@@ -109,13 +110,13 @@ def run_multiple_games(num_runs, output_dir, seed):
 # Main function to execute multiple runs and save rewards and actions
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="idp")
-    parser.add_argument("-s", type=int, help="Seeding")
+    parser.add_argument("-s", type=int, help="Seeding", default=42)
     args = parser.parse_args()
     seed = args.s
-    num_runs = 2  # Number of runs to perform
+    num_runs = 2  # Number of runs
     
     if approach == "combined_vqc":
-        output_dir = "results_combined_" + str(seed)
+        output_dir = "results_combined_baseline_" + str(seed)
     else:
         output_dir = "results_" + str(seed)
     if not os.path.exists(output_dir):
