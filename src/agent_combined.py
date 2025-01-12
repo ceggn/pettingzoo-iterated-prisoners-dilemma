@@ -30,7 +30,7 @@ class Combined_Agents:
         self.memory_dict = {name : deque(maxlen=1000) for name in self.agents}  # Increased memory size for n agents
 
         # Define batch size for training
-        self.batch_size = 64
+        self.batch_size = 10
 
     def choose_actions(self, state_dict):
         # Epsilon-greedy action selection
@@ -57,12 +57,21 @@ class Combined_Agents:
             for agent in action_required:
                 actions[agent] = torch.argmax(q_values[self.q_value_indices[agent]]).item()
 
+        # print("Actions", actions)
+        for agent, action in actions.items():
+            action_name = "COOPERATE" if action == COOPERATE else "DEFECT"
+            print(f"{agent}: {action_name}")
+
         return actions
 
 
     def store_transition(self, state, action, reward, next_state, done, agent_name):
-        # Store the transition in memory
-        self.memory_dict[agent_name].append((state, action, reward, next_state, done))
+        # Übergang speichern
+        transition = (state, action, reward, next_state, done)
+        #print("Transisiton: ", transition, agent_name)
+        
+        self.memory_dict[agent_name].append(transition)
+
 
 
     def sample_batch(self):
@@ -94,48 +103,73 @@ class Combined_Agents:
         self.epsilon = val
 
     def train(self):
-
-        # Train the VQC model using the optimizer
+        # Sample a batch of transitions from memory
         batch_dict = self.sample_batch()
-       
+
         if batch_dict is None:
-            return
+            return  # Skip training if there aren't enough samples
 
-
+        # Prepare batches for each agent
         for agent_name, batches in batch_dict.items():
-
             states, actions, rewards, next_states, dones = batches
+
+            # Convert to tensors
             states = torch.tensor(states, dtype=torch.float32)
             actions = torch.tensor(actions, dtype=torch.int64).unsqueeze(1)
             rewards = torch.tensor(rewards, dtype=torch.float32).unsqueeze(1)
             next_states = torch.tensor(next_states, dtype=torch.float32)
             dones = torch.tensor(dones, dtype=torch.float32).unsqueeze(1)
 
+            # Filter out transitions where dones (truncation flags) are 1
+            non_truncated_indices = torch.where(dones.squeeze() == 0)[0]
+            if len(non_truncated_indices) == 0:
+                continue  # Skip training if no valid transitions remain
+
+            states = states[non_truncated_indices]
+            actions = actions[non_truncated_indices]
+            rewards = rewards[non_truncated_indices]
+            next_states = next_states[non_truncated_indices]
+            dones = dones[non_truncated_indices]
+
             batch_dict[agent_name] = (states, actions, rewards, next_states, dones)
 
+        # Train in batches
+        for i in range(math.ceil(len(states) / self.batch_size)):
+            for agent in self.agents:
+                #print("Agent:", agent)
 
-        for agent in self.agents:
-
-            for i in range(math.ceil(len(states)/self.batch_size)):
-                batch_states = tuple([batch_dict[j][0][i*self.batch_size:(i+1)*self.batch_size] for j in self.agents])
+                # Extract mini-batch for current agent
+                batch_states = tuple([
+                    batch_dict[j][0][i * self.batch_size:(i + 1) * self.batch_size]
+                    for j in self.agents
+                ])
                 q_values = self.model.forward(*batch_states)
+                #print("q_vals1:", q_values)
 
+                # Split q_values for each agent
                 q_values = torch.tensor_split(q_values, [2], dim=1)
-                # Ensure q_values and rewards have the same shape
-                # Select the q_values corresponding to the actions taken
+                #print("q_vals2:", q_values)
 
+                # Select q_values corresponding to the actions taken
+                q_values_selected = q_values[self.q_value_indices[agent]].gather(
+                    1,
+                    batch_dict[agent][1][i * self.batch_size:(i + 1) * self.batch_size]
+                ).float()
 
-                q_values = q_values[self.q_value_indices[agent]].gather(1, batch_dict[agent][1][i*self.batch_size:(i+1)*self.batch_size]).float()
-                rewards_batch = rewards[i*self.batch_size:(i+1)*self.batch_size].float()
+                #print("Selected q_values:", q_values_selected)
 
-                # Calculate loss and perform optimization step
-                loss = torch.nn.functional.mse_loss(q_values, rewards_batch)
+                # Calculate target values using rewards
+                rewards_batch = batch_dict[agent][2][i * self.batch_size:(i + 1) * self.batch_size].float()
+
+                # Calculate loss
+                loss = torch.nn.functional.mse_loss(q_values_selected, rewards_batch)
+                #print(f"Loss for {agent}: {loss.item()}")
+
+                # Backpropagation
                 self.model.optimizer.zero_grad()
                 loss.backward()
                 self.model.optimizer.step()
-                
-        # Apply epsilon decay after each training iteration
+
+        # Apply epsilon decay after training iteration
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
-
-

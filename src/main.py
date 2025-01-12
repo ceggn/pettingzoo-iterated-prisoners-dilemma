@@ -112,10 +112,10 @@ if __name__ == "__main__":
     parser.add_argument("-s", type=int, help="Seeding")
     args = parser.parse_args()
     seed = args.s
-    num_runs = 2  # Number of runs to perform
+    num_runs = 10  # Number of runs to perform
     
     if approach == "combined_vqc":
-        output_dir = "results_combined_" + str(seed)
+        output_dir = "results_truncationfix_test" + str(seed)
     else:
         output_dir = "results_" + str(seed)
     if not os.path.exists(output_dir):

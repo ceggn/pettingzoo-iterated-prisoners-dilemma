@@ -61,11 +61,15 @@ def plot_average_rewards_across_all_runs(input_file, output_dir):
     plt.close()
 
 if __name__ == "__main__":
-    input_file = os.path.join("results", "complete_rewards.json")
-    output_dir = "results"
 
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
 
-    # Plot average rewards across all runs
-    plot_average_rewards_across_all_runs(input_file, output_dir)
+    for i in range(15):  
+        input_file = os.path.join(f"results_testing_loopchanged_{i}", "complete_rewards.json")
+        
+        output_dir = f"results_testing_loopchanged_{i}"
+            
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        # Plot average rewards across all runs
+        plot_average_rewards_across_all_runs(input_file, output_dir)
