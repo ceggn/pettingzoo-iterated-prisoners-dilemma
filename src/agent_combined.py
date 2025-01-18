@@ -24,7 +24,7 @@ class Combined_Agents:
         self.q_value_indices = {agent: c for c, agent in enumerate(self.agents)}
 
         # Initialize the VQC
-        self.model = VQC_Combined(observation_length=observation_length, num_layers=4, action_space=n_actions)
+        self.model = VQC_Combined(self.agents, self.q_value_indices, observation_length=observation_length, num_layers=4, action_space=n_actions)
 
         # Increase memory size for experience replay
         self.memory_dict = {name : deque(maxlen=1000) for name in self.agents}  # Increased memory size for n agents
@@ -134,8 +134,8 @@ class Combined_Agents:
             batch_dict[agent_name] = (states, actions, rewards, next_states, dones)
 
         # Train in batches
-        for i in range(math.ceil(len(states) / self.batch_size)):
-            for agent in self.agents:
+        for agent in self.agents:
+            for i in range(math.ceil(len(states) / self.batch_size)):
                 #print("Agent:", agent)
 
                 # Extract mini-batch for current agent
@@ -166,9 +166,9 @@ class Combined_Agents:
                 #print(f"Loss for {agent}: {loss.item()}")
 
                 # Backpropagation
-                self.model.optimizer.zero_grad()
+                self.model.optimizer[agent].zero_grad()
                 loss.backward()
-                self.model.optimizer.step()
+                self.model.optimizer[agent].step()
 
         # Apply epsilon decay after training iteration
         if self.epsilon > self.epsilon_min:

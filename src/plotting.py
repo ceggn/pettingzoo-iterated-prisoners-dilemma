@@ -64,9 +64,9 @@ if __name__ == "__main__":
 
 
     for i in range(15):  
-        input_file = os.path.join(f"results_testing_loopchanged_{i}", "complete_rewards.json")
+        input_file = os.path.join(f"results_truncationfix_{i}", "complete_rewards.json")
         
-        output_dir = f"results_testing_loopchanged_{i}"
+        output_dir = f"results_truncationfix_{i}"
             
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)

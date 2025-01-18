@@ -6,12 +6,13 @@ import numpy as np
 import torch as T
 import json
 import argparse
+import random
 
 #TODO: handle with Argparse
 approach = "combined_vqc"
 
 # Function to run a single game and return rewards and actions
-def run_single_game(seed):
+def run_single_game(seed, output_dir):
     np.random.seed(seed)
     T.manual_seed(seed)
     random.seed(seed)
@@ -33,8 +34,8 @@ def run_single_game(seed):
     rewards_p2 = []
     actions = {agent_id: [] for agent_id in env.possible_agents}
 
-    # Game loop for 100 steps
-    n = 100  # For a full game
+    # Game loop for 100 games
+    n = 100  
     while n > 0:
         n -= 1
         observations, infos = env.reset(seed=seed)
@@ -83,28 +84,19 @@ def run_single_game(seed):
                 agent.train()
 
     env.close()
-    return rewards_p1, rewards_p2, actions
 
-
-# Function to run multiple games and save complete logs of rewards
-def run_multiple_games(num_runs, output_dir, seed):
-    all_runs_rewards = {}
-
-    for i in range(num_runs):
-        current_seed = seed + i
-        rewards_p1, rewards_p2, _ = run_single_game(current_seed)
-
-        # Store the full rewards for this run
-        all_runs_rewards[f"Run_{i + 1}"] = {
-            "Player_1_Rewards": rewards_p1,
-            "Player_2_Rewards": rewards_p2
-        }
+    # Store the full rewards for this run
+    all_runs_rewards = {
+        "Player_1_Rewards": rewards_p1,
+        "Player_2_Rewards": rewards_p2
+    }
 
     # Save the complete rewards data to a JSON file
     with open(os.path.join(output_dir, "complete_rewards.json"), 'w') as f:
         json.dump(all_runs_rewards, f, indent=4)
+    
+    return rewards_p1, rewards_p2, actions
 
-    return all_runs_rewards
 
 
 # Main function to execute multiple runs and save rewards and actions
@@ -113,14 +105,12 @@ if __name__ == "__main__":
     parser.add_argument("-s", type=int, help="Seeding", default=42)
     args = parser.parse_args()
     seed = args.s
-    num_runs = 10  # Number of runs to perform
     
     if approach == "combined_vqc":
-        output_dir = "results_truncationfix_test" + str(seed)
+        output_dir = "testing" + str(seed)
     else:
         output_dir = "results_" + str(seed)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-
-    # Run multiple games and save complete logs
-    run_multiple_games(num_runs, output_dir, seed)
+    
+    run_single_game(seed, output_dir)
