@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Specify hyperparameters
-runs=15
+runs=3
 # datasets=("iris" "wine")
 # approaches=("random" "OL-NN-EP" "TL-NN-EP" "OL-NN" "TL-NN")
 

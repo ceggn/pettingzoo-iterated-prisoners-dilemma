@@ -10,7 +10,7 @@ COOPERATE = 0
 DEFECT = 1
 
 class Combined_Agents:
-    def __init__(self, agents, observation_length, n_actions, n_games=25, alpha=0.1, epsilon=0.05, gamma=0.99, epsilon_decay=0.995, epsilon_min=0.01) -> None:
+    def __init__(self, agents, observation_length, n_actions, n_games=25, alpha=0.1, epsilon=0.5, gamma=0.99, epsilon_decay=0.9, epsilon_min=0.01) -> None:
         # Initialize agent parameters
         self.n_games = n_games  # Number of games 
         self.alpha = alpha  # Learning rate

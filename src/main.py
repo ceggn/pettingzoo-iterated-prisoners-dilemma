@@ -35,7 +35,7 @@ def run_single_game(seed, output_dir):
     actions = {agent_id: [] for agent_id in env.possible_agents}
 
     # Game loop for 100 games
-    n = 100  
+    n = 200
     while n > 0:
         n -= 1
         observations, infos = env.reset(seed=seed)
@@ -107,7 +107,7 @@ if __name__ == "__main__":
     seed = args.s
     
     if approach == "combined_vqc":
-        output_dir = "testing" + str(seed)
+        output_dir = "experiment_cnot_run10_" + str(seed)
     else:
         output_dir = "results_" + str(seed)
     if not os.path.exists(output_dir):
