@@ -1,0 +1,16 @@
+Wire assignment: {'player_0': [0, 1], 'player_1': [2, 3]}
+Initialized Weights: dict_keys(['player_0', 'player_1'])
+Traceback (most recent call last):
+  File "/home/h/heinrichma/work/pettingzoo-iterated-prisoners-dilemma/src/main.py", line 116, in <module>
+    run_single_game(seed, output_dir)
+  File "/home/h/heinrichma/work/pettingzoo-iterated-prisoners-dilemma/src/main.py", line 44, in run_single_game
+    actions_step = combined_agents.choose_actions(observations)
+  File "/home/h/heinrichma/work/pettingzoo-iterated-prisoners-dilemma/src/agent_combined.py", line 53, in choose_actions
+    q_values = self.model.forward(*states)
+  File "/home/h/heinrichma/work/pettingzoo-iterated-prisoners-dilemma/src/vqc_combined.py", line 97, in forward
+    q_vals_agent = [torch.stack(self.scale(self.qnode(self.weights, i, j))) 
+  File "/home/h/heinrichma/work/pettingzoo-iterated-prisoners-dilemma/src/vqc_combined.py", line 97, in <listcomp>
+    q_vals_agent = [torch.stack(self.scale(self.qnode(self.weights, i, j))) 
+  File "/home/h/heinrichma/work/pettingzoo-iterated-prisoners-dilemma/src/vqc_combined.py", line 115, in scale
+    expected_vals = torch.clamp(expected_vals - 0.1, min=0)
+TypeError: unsupported operand type(s) for -: 'list' and 'float'

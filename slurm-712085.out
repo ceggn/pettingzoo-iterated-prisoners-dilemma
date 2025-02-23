@@ -1,0 +1,21 @@
+
+[notice] A new release of pip is available: 24.3.1 -> 25.0
+[notice] To update, run: pip install --upgrade pip
+Traceback (most recent call last):
+  File "/home/h/heinrichma/work/pettingzoo-iterated-prisoners-dilemma/src/main.py", line 116, in <module>
+    run_single_game(seed, output_dir)
+  File "/home/h/heinrichma/work/pettingzoo-iterated-prisoners-dilemma/src/main.py", line 44, in run_single_game
+    actions_step = combined_agents.choose_actions(observations)
+  File "/home/h/heinrichma/work/pettingzoo-iterated-prisoners-dilemma/src/agent_combined.py", line 53, in choose_actions
+    q_values = self.model.forward(*states)
+  File "/home/h/heinrichma/work/pettingzoo-iterated-prisoners-dilemma/src/vqc_combined.py", line 257, in forward
+    q_vals_agent = [torch.stack(self.scale(self.qnode(self.weights, i, j))) for i, j in torch.stack((x1, x2), dim=1)]
+  File "/home/h/heinrichma/work/pettingzoo-iterated-prisoners-dilemma/src/vqc_combined.py", line 257, in <listcomp>
+    q_vals_agent = [torch.stack(self.scale(self.qnode(self.weights, i, j))) for i, j in torch.stack((x1, x2), dim=1)]
+  File "/home/h/heinrichma/.pyenv/versions/env/lib/python3.9/site-packages/pennylane/workflow/qnode.py", line 1092, in __call__
+    self.construct(args, kwargs)
+  File "/home/h/heinrichma/.pyenv/versions/env/lib/python3.9/site-packages/pennylane/workflow/qnode.py", line 929, in construct
+    self._qfunc_output = self.func(*args, **kwargs)
+  File "/home/h/heinrichma/work/pettingzoo-iterated-prisoners-dilemma/src/vqc_combined.py", line 84, in circuit
+    qml.RY(weights[i, q, 0], wires=q)  # Y-Rotation mit trainierbarem Parameter
+NameError: name 'q' is not defined

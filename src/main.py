@@ -34,7 +34,7 @@ def run_single_game(seed, output_dir):
     rewards_p2 = []
     actions = {agent_id: [] for agent_id in env.possible_agents}
 
-    # Game loop for 100 games
+    # Game loop
     n = 200
     while n > 0:
         n -= 1
@@ -107,7 +107,7 @@ if __name__ == "__main__":
     seed = args.s
     
     if approach == "combined_vqc":
-        output_dir = "experiment_cnot_run10_" + str(seed)
+        output_dir = "results_5_new/experiment_cnot_run33_" + str(seed)
     else:
         output_dir = "results_" + str(seed)
     if not os.path.exists(output_dir):

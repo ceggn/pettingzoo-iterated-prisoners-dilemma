@@ -43,7 +43,7 @@ def plot_individual_runs(folder_name, input_file):
     plt.ylabel("Average Reward")
     plt.title(f"Average Reward per Segment ({folder_name})")
     plt.legend()
-    plt.savefig(os.path.join(folder_name, "average_rewards.png"))
+    plt.savefig(os.path.join(folder_name, "average_rewards.pdf"))
     plt.close()
 
 def plot_aggregated_data(dataframe, output_dir):
@@ -58,13 +58,14 @@ def plot_aggregated_data(dataframe, output_dir):
         y="Reward",
         hue="Player",
         errorbar="sd",
-        marker='o'
     )
+    plt.axhline(y=1, color="red", linestyle="-", label="DEFECT")
+    plt.axhline(y=3, color="green", linestyle="--", label="COOPERATE")
     plt.xlabel("Episodes (25-Game Segment)")
     plt.ylabel("Average Reward")
     plt.title("")
     plt.legend(title="Player")
-    plt.savefig(os.path.join(output_dir, "aggregated_rewards_individual.png"))
+    plt.savefig(os.path.join(output_dir, "aggregated_rewards_individual.pdf"))
     plt.close()
 
     # Compute sum of Player 1 and Player 2 rewards for each segment
@@ -79,15 +80,14 @@ def plot_aggregated_data(dataframe, output_dir):
         x="Segment",
         y="Reward_Sum",
         errorbar="sd",
-        marker='o'
     )
-    plt.axhline(y=2, color="red", linestyle="-", label="DEFECT")  
-    plt.axhline(y=6, color="green", linestyle="--", label="COOPERATE")  
+    plt.axhline(y=2, color="red", linestyle="-", label="DEFECT")
+    plt.axhline(y=6, color="green", linestyle="--", label="COOPERATE")
     plt.xlabel("Episodes (25-Game Segment)")
     plt.ylabel("Average Reward")
     plt.title("")
     plt.legend(title="")
-    plt.savefig(os.path.join(output_dir, "aggregated_rewards_sum.png"))
+    plt.savefig(os.path.join(output_dir, "aggregated_rewards_sum.pdf"))
     plt.close()
 
 def calculate_cooperation_rate(rewards, num_segments):
@@ -115,13 +115,13 @@ def plot_cooperation_rate(dataframe, output_dir):
         y="Cooperation Rate",
         hue="Player",
         errorbar="sd",
-        marker='o'
+        # marker='o'
     )
     plt.xlabel("Episodes (25-Game Segment)")
     plt.ylabel("Cooperation Rate")
     plt.title("Cooperation Rate Over Time")
     plt.legend(title="Player")
-    plt.savefig(os.path.join(output_dir, "cooperation_rate_individual.png"))
+    plt.savefig(os.path.join(output_dir, "cooperation_rate_individual.pdf"))
     plt.close()
 
 def calculate_defection_rate(rewards, num_segments):
@@ -149,13 +149,13 @@ def plot_defection_rate(dataframe, output_dir):
         y="Defection Rate",
         hue="Player",
         errorbar="sd",
-        marker='o'
+        # marker='o'
     )
     plt.xlabel("Episodes (25-Game Segment)")
     plt.ylabel("Defection Rate")
     plt.title("Defection Rate Over Time")
     plt.legend(title="Player")
-    plt.savefig(os.path.join(output_dir, "defection_rate_individual.png"))
+    plt.savefig(os.path.join(output_dir, "defection_rate_individual.pdf"))
     plt.close()
 
 def visualize_vqc(output_filename):
@@ -231,6 +231,6 @@ def process_all_runs(base_dir, num_folders):
     visualize_vqc(output_filename)
 
 if __name__ == "__main__":
-    BASE_DIR = "experiment_cnot_run03"
-    NUM_FOLDERS = 15
+    BASE_DIR = "results_5_new/experiment_cnot_run30"
+    NUM_FOLDERS = 5
     process_all_runs(BASE_DIR, NUM_FOLDERS)

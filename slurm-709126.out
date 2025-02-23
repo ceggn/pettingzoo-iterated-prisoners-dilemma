@@ -1,0 +1,80 @@
+/home/h/heinrichma/.pyenv/versions/env/lib/python3.9/site-packages/torch/autograd/__init__.py:266: UserWarning: Error detected in MulBackward0. Traceback of forward call that caused the error:
+  File "/home/h/heinrichma/work/pettingzoo-iterated-prisoners-dilemma/src/main.py", line 116, in <module>
+    run_single_game(seed, output_dir)
+  File "/home/h/heinrichma/work/pettingzoo-iterated-prisoners-dilemma/src/main.py", line 81, in run_single_game
+    combined_agents.train()
+  File "/home/h/heinrichma/work/pettingzoo-iterated-prisoners-dilemma/src/agent_combined.py", line 148, in train
+    q_values = self.model.forward(*batch_states)
+  File "/home/h/heinrichma/work/pettingzoo-iterated-prisoners-dilemma/src/vqc_combined.py", line 97, in forward
+    q_vals_agent = [self.scale(self.qnode(self.weights, i, j)) for i, j in torch.stack((x1, x2), dim=1)]
+  File "/home/h/heinrichma/work/pettingzoo-iterated-prisoners-dilemma/src/vqc_combined.py", line 97, in <listcomp>
+    q_vals_agent = [self.scale(self.qnode(self.weights, i, j)) for i, j in torch.stack((x1, x2), dim=1)]
+  File "/home/h/heinrichma/work/pettingzoo-iterated-prisoners-dilemma/src/vqc_combined.py", line 125, in scale
+    expected_vals[q_index + 1] = expected_vals[q_index + 1] * self.expected_val_scaling[agent][1]
+ (Triggered internally at ../torch/csrc/autograd/python_anomaly_mode.cpp:113.)
+  Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+Wire assignment: {'player_0': [0, 1], 'player_1': [2, 3]}
+Initialized Weights: dict_keys(['player_0', 'player_1'])
+player_0: COOPERATE
+player_1: DEFECT
+player_0: DEFECT
+player_1: DEFECT
+player_1: DEFECT
+player_0: COOPERATE
+player_0: COOPERATE
+player_1: DEFECT
+player_1: COOPERATE
+player_0: DEFECT
+player_0: DEFECT
+player_1: DEFECT
+player_0: DEFECT
+player_1: COOPERATE
+player_1: DEFECT
+player_0: COOPERATE
+player_0: COOPERATE
+player_1: COOPERATE
+player_1: DEFECT
+player_0: DEFECT
+player_0: DEFECT
+player_1: COOPERATE
+player_0: COOPERATE
+player_1: DEFECT
+player_0: DEFECT
+player_1: DEFECT
+player_0: COOPERATE
+player_1: DEFECT
+player_0: DEFECT
+player_1: DEFECT
+player_0: COOPERATE
+player_1: DEFECT
+player_1: COOPERATE
+player_0: DEFECT
+player_0: COOPERATE
+player_1: COOPERATE
+player_0: DEFECT
+player_1: DEFECT
+player_1: DEFECT
+player_0: COOPERATE
+player_0: DEFECT
+player_1: DEFECT
+player_0: DEFECT
+player_1: COOPERATE
+player_0: COOPERATE
+player_1: DEFECT
+player_0: DEFECT
+player_1: DEFECT
+player_1: COOPERATE
+player_0: COOPERATE
+Game Over!
+Traceback (most recent call last):
+  File "/home/h/heinrichma/work/pettingzoo-iterated-prisoners-dilemma/src/main.py", line 116, in <module>
+    run_single_game(seed, output_dir)
+  File "/home/h/heinrichma/work/pettingzoo-iterated-prisoners-dilemma/src/main.py", line 81, in run_single_game
+    combined_agents.train()
+  File "/home/h/heinrichma/work/pettingzoo-iterated-prisoners-dilemma/src/agent_combined.py", line 172, in train
+    loss.backward()
+  File "/home/h/heinrichma/.pyenv/versions/env/lib/python3.9/site-packages/torch/_tensor.py", line 522, in backward
+    torch.autograd.backward(
+  File "/home/h/heinrichma/.pyenv/versions/env/lib/python3.9/site-packages/torch/autograd/__init__.py", line 266, in backward
+    Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+RuntimeError: one of the variables needed for gradient computation has been modified by an inplace operation: [torch.FloatTensor []], which is output 0 of AsStridedBackward0, is at version 2; expected version 1 instead. Hint: the backtrace further above shows the operation that failed to compute its gradient. The variable in question was changed in there or anywhere later. Good luck!
