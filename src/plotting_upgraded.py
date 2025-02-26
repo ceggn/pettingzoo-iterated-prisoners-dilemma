@@ -39,10 +39,12 @@ def plot_individual_runs(folder_name, input_file):
     sns.lineplot(x=range(num_segments), y=p1_segment_rewards, label="Player 1", marker='o')
     sns.lineplot(x=range(num_segments), y=p2_segment_rewards, label="Player 2", marker='o')
     sns.lineplot(x=range(num_segments), y=sum_segment_rewards, label="Sum of Rewards", marker='o', linestyle='--')
-    plt.xlabel("Episodes (25-Game Segment)")
+    plt.xlabel("Episodes (25-Game Segment)", fontsize = 18)
     plt.ylabel("Average Reward")
-    plt.title(f"Average Reward per Segment ({folder_name})")
-    plt.legend()
+    plt.title(f"Average Reward per Segment ({folder_name})", fontsize = 18)
+    plt.xticks(fontsize=15)
+    plt.yticks(fontsize=15)
+    plt.legend(title="Player", fontsize=15, title_fontsize=18)
     plt.savefig(os.path.join(folder_name, "average_rewards.pdf"))
     plt.close()
 
@@ -61,10 +63,12 @@ def plot_aggregated_data(dataframe, output_dir):
     )
     plt.axhline(y=1, color="red", linestyle="-", label="DEFECT")
     plt.axhline(y=3, color="green", linestyle="--", label="COOPERATE")
-    plt.xlabel("Episodes (25-Game Segment)")
-    plt.ylabel("Average Reward")
+    plt.xlabel("Episodes (25-Game Segment)", fontsize = 18)
+    plt.ylabel("Average Reward", fontsize = 18)
     plt.title("")
-    plt.legend(title="Player")
+    plt.xticks(fontsize=15)
+    plt.yticks(fontsize=15)
+    plt.legend(title="Player", fontsize=15, title_fontsize=18)
     plt.savefig(os.path.join(output_dir, "aggregated_rewards_individual.pdf"))
     plt.close()
 
@@ -83,10 +87,12 @@ def plot_aggregated_data(dataframe, output_dir):
     )
     plt.axhline(y=2, color="red", linestyle="-", label="DEFECT")
     plt.axhline(y=6, color="green", linestyle="--", label="COOPERATE")
-    plt.xlabel("Episodes (25-Game Segment)")
-    plt.ylabel("Average Reward")
+    plt.xlabel("Episodes (25-Game Segment)", fontsize = 18)
+    plt.ylabel("Average Reward", fontsize = 18)
+    plt.xticks(fontsize=15)
+    plt.yticks(fontsize=15)
     plt.title("")
-    plt.legend(title="")
+    plt.legend(title="", fontsize=15, title_fontsize=18)
     plt.savefig(os.path.join(output_dir, "aggregated_rewards_sum.pdf"))
     plt.close()
 
@@ -117,10 +123,12 @@ def plot_cooperation_rate(dataframe, output_dir):
         errorbar="sd",
         # marker='o'
     )
-    plt.xlabel("Episodes (25-Game Segment)")
-    plt.ylabel("Cooperation Rate")
-    plt.title("Cooperation Rate Over Time")
-    plt.legend(title="Player")
+    plt.xlabel("Episodes (25-Game Segment)", fontsize = 18)
+    plt.ylabel("Cooperation Rate", fontsize = 18)
+    # plt.title("Cooperation Rate Over Time", fontsize = 18)
+    plt.xticks(fontsize=15)
+    plt.yticks(fontsize=15)
+    plt.legend(title="Player", fontsize=15, title_fontsize=18)
     plt.savefig(os.path.join(output_dir, "cooperation_rate_individual.pdf"))
     plt.close()
 
@@ -231,6 +239,6 @@ def process_all_runs(base_dir, num_folders):
     visualize_vqc(output_filename)
 
 if __name__ == "__main__":
-    BASE_DIR = "results_5_new/experiment_cnot_run30"
+    BASE_DIR = "results_5_new/experiment_cnot_run38"
     NUM_FOLDERS = 5
     process_all_runs(BASE_DIR, NUM_FOLDERS)

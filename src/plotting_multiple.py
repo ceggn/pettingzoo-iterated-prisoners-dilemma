@@ -39,10 +39,12 @@ def plot_individual_runs(folder_name, input_file):
     sns.lineplot(x=range(num_segments), y=p1_segment_rewards, label="Player 1", marker='o')
     sns.lineplot(x=range(num_segments), y=p2_segment_rewards, label="Player 2", marker='o')
     sns.lineplot(x=range(num_segments), y=sum_segment_rewards, label="Sum of Rewards", marker='o', linestyle='--')
-    plt.xlabel("Episodes (25-Game Segment)")
-    plt.ylabel("Average Reward")
-    # plt.title(f"Average Reward per Segment ({folder_name})")
-    plt.legend()
+    plt.xlabel("Episodes (25-Game Segment)", fontsize=18)
+    plt.ylabel("Average Reward", fontsize=18)
+    plt.title(f"Average Reward per Segment ({folder_name})", fontsize=18)
+    plt.xticks(fontsize=15)
+    plt.yticks(fontsize=15)
+    plt.legend(title="Player", fontsize=15, title_fontsize=18)
     plt.savefig(os.path.join(folder_name, "average_rewards.pdf"))
     plt.close()
 
@@ -92,7 +94,10 @@ def process_multiple_experiments(base_dirs, num_folders):
             p1_defection_rate = calculate_defection_rate(player_1_rewards, num_segments)
             p2_defection_rate = calculate_defection_rate(player_2_rewards, num_segments)
 
-            for segment, (p1, p2, p1_coop, p2_coop, p1_def, p2_def) in enumerate(zip(p1_segment_rewards, p2_segment_rewards, p1_cooperation_rate, p2_cooperation_rate, p1_defection_rate, p2_defection_rate)):
+            for segment, (p1, p2, p1_coop, p2_coop, p1_def, p2_def) in enumerate(zip(
+                    p1_segment_rewards, p2_segment_rewards,
+                    p1_cooperation_rate, p2_cooperation_rate,
+                    p1_defection_rate, p2_defection_rate)):
                 aggregated_data.append({
                     "Segment": segment,
                     "Reward": p1,
@@ -132,10 +137,11 @@ def plot_aggregated_experiments(dataframe, output_dir):
         errorbar=None,
         # marker='o'
     )
-    plt.xlabel("Episodes (25-Game Segment)")
-    plt.ylabel("Average Reward")
-    # plt.title("Average Reward Comparison Across Experiments")
-    plt.legend(title="Experiment & Player")
+    plt.xlabel("Episodes (25-Game Segment)", fontsize=18)
+    plt.ylabel("Average Reward", fontsize=18)
+    plt.xticks(fontsize=15)
+    plt.yticks(fontsize=15)
+    plt.legend(title="Experiment & Player", fontsize=15, title_fontsize=18)
     plt.savefig(os.path.join(output_dir, "aggregated_rewards_experiments.pdf"))
     plt.close()
 
@@ -154,10 +160,11 @@ def plot_aggregated_experiments(dataframe, output_dir):
     )
     plt.axhline(y=2, color="red", linestyle="-", label="DEFECT")  
     plt.axhline(y=6, color="green", linestyle="--", label="COOPERATE")  
-    plt.xlabel("Episodes (25-Game Segment)")
-    plt.ylabel("Average Reward")
-    # plt.title("Comparison of Sum of Rewards Across Experiments")
-    plt.legend(title="Experiment")
+    plt.xlabel("Episodes (25-Game Segment)", fontsize=18)
+    plt.ylabel("Average Reward", fontsize=18)
+    plt.xticks(fontsize=15)
+    plt.yticks(fontsize=15)
+    plt.legend(title="Experiment", fontsize=15, title_fontsize=18)
     plt.savefig(os.path.join(output_dir, "aggregated_rewards_sum_experiments.pdf"))
     plt.close()
 
@@ -171,10 +178,11 @@ def plot_aggregated_experiments(dataframe, output_dir):
         errorbar=None,
         # marker='o'
     )
-    plt.xlabel("Episodes (25-Game Segment)")
-    plt.ylabel("Cooperation Rate")
-    # plt.title("Cooperation Rate Comparison Across Experiments")
-    plt.legend(title="Experiment & Player")
+    plt.xlabel("Episodes (25-Game Segment)", fontsize=18)
+    plt.ylabel("Cooperation Rate", fontsize=18)
+    plt.xticks(fontsize=15)
+    plt.yticks(fontsize=15)
+    plt.legend(title="Experiment & Player", fontsize=15, title_fontsize=18)
     plt.savefig(os.path.join(output_dir, "cooperation_rate_experiments.pdf"))
     plt.close()
 
@@ -188,20 +196,23 @@ def plot_aggregated_experiments(dataframe, output_dir):
         errorbar=None,
         # marker='o'
     )
-    plt.xlabel("Episodes (25-Game Segment)")
-    plt.ylabel("Defection Rate")
-    plt.title("Defection Rate Comparison Across Experiments")
-    plt.legend(title="Experiment & Player")
+    plt.xlabel("Episodes (25-Game Segment)", fontsize=18)
+    plt.ylabel("Defection Rate", fontsize=18)
+    plt.title("Defection Rate Comparison Across Experiments", fontsize=18)
+    plt.xticks(fontsize=15)
+    plt.yticks(fontsize=15)
+    plt.legend(title="Experiment & Player", fontsize=15, title_fontsize=18)
     plt.savefig(os.path.join(output_dir, "defection_rate_experiments.pdf"))
     plt.close()
+
 
 if __name__ == "__main__":
     EXPERIMENTS = {
         "results_5_new/experiment_baseline": "Baseline",
-        "results_5_new/experiment_cnot_run03": "Experiment 3",
-        "results_5_new/experiment_cnot_run04": "Experiment 4",
-        "results_5_new/experiment_cnot_run06": "Experiment 6",
-        "results_5_new/experiment_cnot_run17": "Experiment 17",
+        "results_5_new/experiment_cnot_run09": "Experiment 9, Bidirectional Entanglement",
+        "results_5_new/experiment_cnot_run22": "Experiment 22, Symmetric Swap",
+        "results_5_new/experiment_cnot_run31": "Experiment 31, Modular CZ Alignment",
+        "results_5_new/experiment_cnot_run32": "Experiment 32, Controlled SWAP",
     }
     NUM_FOLDERS = 5
 

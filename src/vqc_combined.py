@@ -223,11 +223,6 @@ class VQC_Combined(nn.Module):
             # qml.CNOT(wires=[0, 3])  # Further enforce defection onto Agent 2
 
 
-            # experiment_cnot_run26
-            # qml.PauliX(wires=0)  # Force Agent 1 into defection
-            # qml.CNOT(wires=[0, 2])  # Agent 1 enforces its decision onto Agent 2
-            # qml.RZ(-np.pi / 4, wires=2)  # Introduce bias toward defection
-            # qml.CNOT(wires=[0, 3])  # Further enforce defection onto Agent 2
 
             # experiment_cnot_run27
             # qml.Hadamard(wires=0)  # Agent 1 starts in superposition
@@ -237,11 +232,11 @@ class VQC_Combined(nn.Module):
             # qml.RX(-np.pi / 4, wires=3)  # Introduce randomness for Agent 2
 
             # experiment_cnot_run28
-            # qml.Hadamard(wires=0)  # Agent 1 explores cooperation
-            # qml.CNOT(wires=[0, 2])  # Agent 1 entangles with Agent 2
-            # qml.T(wires=2)  # Introduce a delay effect on Agent 2
-            # qml.CNOT(wires=[2, 3])  # Pass the defection information forward
-            # qml.SWAP(wires=[2, 3])  # Exchange qubits for delayed impact
+            qml.Hadamard(wires=0)  # Agent 1 explores cooperation
+            qml.CNOT(wires=[0, 2])  # Agent 1 entangles with Agent 2
+            qml.T(wires=2)  # Introduce a delay effect on Agent 2
+            qml.CNOT(wires=[2, 3])  # Pass the defection information forward
+            qml.SWAP(wires=[2, 3])  # Exchange qubits for delayed impact
 
 
             # experiment_cnot_run29
@@ -267,8 +262,8 @@ class VQC_Combined(nn.Module):
             # qml.CSWAP(wires=[0, 1, 2])
 
             # #experiment_cnot_run33
-            qml.CRY(np.pi / 4, wires=[0, 2])
-            qml.CRX(np.pi / 6, wires=[1, 3])
+            # qml.CRY(np.pi / 4, wires=[0, 2])
+            # qml.CRX(np.pi / 6, wires=[1, 3])
 
             # #experiment_cnot_run34
             # qml.SWAP(wires=[0, 2])

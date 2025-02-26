@@ -107,7 +107,7 @@ if __name__ == "__main__":
     seed = args.s
     
     if approach == "combined_vqc":
-        output_dir = "results_5_new/experiment_cnot_run33_" + str(seed)
+        output_dir = "results_5_new/experiment_cnot_run28_" + str(seed)
     else:
         output_dir = "results_" + str(seed)
     if not os.path.exists(output_dir):

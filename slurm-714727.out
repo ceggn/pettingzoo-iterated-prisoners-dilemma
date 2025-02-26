@@ -1,0 +1,44 @@
+
+[notice] A new release of pip is available: 24.3.1 -> 25.0.1
+[notice] To update, run: pip install --upgrade pip
+player_0: DEFECT
+player_1: COOPERATE
+Traceback (most recent call last):
+  File "/home/h/heinrichma/.pyenv/versions/env/lib/python3.9/site-packages/pennylane/devices/preprocess.py", line 62, in _operator_decomposition_gen
+    decomp = decomposer(op)
+  File "/home/h/heinrichma/.pyenv/versions/env/lib/python3.9/site-packages/pennylane/devices/preprocess.py", line 328, in decomposer
+    return op.decomposition()
+  File "/home/h/heinrichma/.pyenv/versions/env/lib/python3.9/site-packages/pennylane/operation.py", line 1285, in decomposition
+    return self.compute_decomposition(
+  File "/home/h/heinrichma/.pyenv/versions/env/lib/python3.9/site-packages/pennylane/operation.py", line 1310, in compute_decomposition
+    raise DecompositionUndefinedError
+pennylane.operation.DecompositionUndefinedError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/h/heinrichma/work/pettingzoo-iterated-prisoners-dilemma/src/main.py", line 116, in <module>
+    run_single_game(seed, output_dir)
+  File "/home/h/heinrichma/work/pettingzoo-iterated-prisoners-dilemma/src/main.py", line 44, in run_single_game
+    actions_step = combined_agents.choose_actions(observations)
+  File "/home/h/heinrichma/work/pettingzoo-iterated-prisoners-dilemma/src/agent_combined.py", line 53, in choose_actions
+    q_values = self.model.forward(*states)
+  File "/home/h/heinrichma/work/pettingzoo-iterated-prisoners-dilemma/src/vqc_combined.py", line 315, in forward
+    q_vals_agent = [torch.stack(self.scale(self.qnode(self.weights, i, j))) for i, j in torch.stack((x1, x2), dim=1)]
+  File "/home/h/heinrichma/work/pettingzoo-iterated-prisoners-dilemma/src/vqc_combined.py", line 315, in <listcomp>
+    q_vals_agent = [torch.stack(self.scale(self.qnode(self.weights, i, j))) for i, j in torch.stack((x1, x2), dim=1)]
+  File "/home/h/heinrichma/.pyenv/versions/env/lib/python3.9/site-packages/pennylane/workflow/qnode.py", line 1098, in __call__
+    res = self._execution_component(args, kwargs, override_shots=override_shots)
+  File "/home/h/heinrichma/.pyenv/versions/env/lib/python3.9/site-packages/pennylane/workflow/qnode.py", line 1052, in _execution_component
+    res = qml.execute(
+  File "/home/h/heinrichma/.pyenv/versions/env/lib/python3.9/site-packages/pennylane/workflow/execution.py", line 600, in execute
+    tapes, post_processing = transform_program(tapes)
+  File "/home/h/heinrichma/.pyenv/versions/env/lib/python3.9/site-packages/pennylane/transforms/core/transform_program.py", line 509, in __call__
+    new_tapes, fn = transform(tape, *targs, **tkwargs)
+  File "/home/h/heinrichma/.pyenv/versions/env/lib/python3.9/site-packages/pennylane/devices/preprocess.py", line 340, in decompose
+    new_ops = [
+  File "/home/h/heinrichma/.pyenv/versions/env/lib/python3.9/site-packages/pennylane/devices/preprocess.py", line 343, in <listcomp>
+    for final_op in _operator_decomposition_gen(
+  File "/home/h/heinrichma/.pyenv/versions/env/lib/python3.9/site-packages/pennylane/devices/preprocess.py", line 65, in _operator_decomposition_gen
+    raise DeviceError(
+pennylane._device.DeviceError: Operator DepolarizingChannel(0.1, wires=[0]) not supported on default.qubit and does not provide a decomposition.
